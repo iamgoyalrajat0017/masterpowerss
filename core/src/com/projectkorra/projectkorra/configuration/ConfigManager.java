@@ -929,8 +929,11 @@ public class ConfigManager {
 			config.addDefault("Abilities.Air.AirBreath.GrowTime", 0);
 			config.addDefault("Abilities.Air.AirBreath.CanExcavateSuspiciousBlocks", false);
             config.addDefault("Abilities.Air.AirBreath.TempBlockRevertTime", 10000L);
+            config.addDefault("Abilities.Air.AirBreath.KnockBackFallOffRangeFactor", 0.8);
+            config.addDefault("Abilities.Air.AirBreath.KnockBackVerticalLift", 0.04);
+            config.addDefault("Abilities.Air.AirBreath.ExitBurstFactor", 0.4);
 
-			config.addDefault("Abilities.Air.AirShield.Enabled", true);
+            config.addDefault("Abilities.Air.AirShield.Enabled", true);
 			config.addDefault("Abilities.Air.AirShield.Cooldown", 0);
 			config.addDefault("Abilities.Air.AirShield.Duration", 0);
 			config.addDefault("Abilities.Air.AirShield.MaxRadius", 7);

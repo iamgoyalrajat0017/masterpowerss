@@ -44,9 +44,6 @@ public class AirBreath extends AirAbility {
     private static final double PARTICLE_STEP = 0.5;
     private static final double BASE_CONE_ANGLE_DEGREES = 25.0;
     private static final double CONE_ANGLE_GROWTH_PER_BLOCK = 1.5;
-    private static final double KNOCKBACK_FALLOFF_RANGE_FACTOR = 0.8;
-    private static final double KNOCKBACK_VERTICAL_LIFT = 0.04;
-    private static final double EXIT_BURST_FACTOR = 0.4;
 
     private static final double MIN_SPLASH_RADIUS = 1.0;
     private static final double LAVA_WAVE_STEP = 0.5;
@@ -80,6 +77,9 @@ public class AirBreath extends AirAbility {
     @Attribute(Attribute.CHARGE_DURATION)
     private long growTime;
     private long tempBlockRevertTime;
+    private double knockBackFallOffRangeFactor;
+    private double knockBackVerticalLift;
+    private double exitBurstFactor;
     private boolean canExcavateSuspiciousBlocks;
 
     // Entities that were inside the breath cone last tick
@@ -115,6 +115,9 @@ public class AirBreath extends AirAbility {
         this.growTime = getConfig().getLong(CONFIG_ROOT_PATH + "GrowTime");
         this.canExcavateSuspiciousBlocks = getConfig().getBoolean(CONFIG_ROOT_PATH + "CanExcavateSuspiciousBlocks");
         this.tempBlockRevertTime = getConfig().getLong(CONFIG_ROOT_PATH + "TempBlockRevertTime");
+        this.knockBackFallOffRangeFactor = getConfig().getDouble(CONFIG_ROOT_PATH + "KnockBackFallOffRangeFactor");
+        this.knockBackVerticalLift = getConfig().getDouble(CONFIG_ROOT_PATH + "KnockBackVerticalLift");
+        this.exitBurstFactor =  getConfig().getDouble(CONFIG_ROOT_PATH + "ExitBurstFactor");
 
         start();
     }
@@ -486,7 +489,7 @@ public class AirBreath extends AirAbility {
 
             // Add to existing velocity each tick, slight Y lift so entities arc upward
              Vector push = breathContext.lookDirection().clone().multiply(strength);
-             push.setY(push.getY() + KNOCKBACK_VERTICAL_LIFT);
+             push.setY(push.getY() + knockBackVerticalLift);
 
              Vector newVelocity = entity.getVelocity().add(push);
              if (newVelocity.length() > knockback) {
@@ -500,7 +503,7 @@ public class AirBreath extends AirAbility {
         for (Entity entity : previouslyInCone) {
             if (entitiesInCone.contains(entity)) continue;
 
-            Vector burst = breathContext.lookDirection().clone().multiply(knockback * EXIT_BURST_FACTOR);
+            Vector burst = breathContext.lookDirection().clone().multiply(knockback * exitBurstFactor);
             GeneralMethods.setVelocity(this, entity, entity.getVelocity().add(burst));
         }
 
@@ -657,7 +660,7 @@ public class AirBreath extends AirAbility {
     }
 
     private double getDistanceScaledKnockback(double distance) {
-        return knockback * (1.0 - distance / (range * KNOCKBACK_FALLOFF_RANGE_FACTOR));
+        return knockback * (1.0 - distance / (range * knockBackFallOffRangeFactor));
     }
 
     private boolean isInvalidEffectLocation(Location location) {
