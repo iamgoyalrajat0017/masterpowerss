@@ -928,6 +928,7 @@ public class ConfigManager {
 			config.addDefault("Abilities.Air.AirBreath.SelfPushStrength", 0.2);
 			config.addDefault("Abilities.Air.AirBreath.GrowTime", 0);
 			config.addDefault("Abilities.Air.AirBreath.CanExcavateSuspiciousBlocks", false);
+            config.addDefault("Abilities.Air.AirBreath.TempBlockRevertTime", 10000L);
 
 			config.addDefault("Abilities.Air.AirShield.Enabled", true);
 			config.addDefault("Abilities.Air.AirShield.Cooldown", 0);

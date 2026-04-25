@@ -47,7 +47,6 @@ public class AirBreath extends AirAbility {
     private static final double KNOCKBACK_FALLOFF_RANGE_FACTOR = 0.8;
     private static final double KNOCKBACK_VERTICAL_LIFT = 0.04;
     private static final double EXIT_BURST_FACTOR = 0.4;
-    private static final long TEMP_BLOCK_DURATION = 10000L;
 
     private static final double MIN_SPLASH_RADIUS = 1.0;
     private static final double LAVA_WAVE_STEP = 0.5;
@@ -80,6 +79,7 @@ public class AirBreath extends AirAbility {
     private long cooldown;
     @Attribute(Attribute.CHARGE_DURATION)
     private long growTime;
+    private long tempBlockRevertTime;
     private boolean canExcavateSuspiciousBlocks;
 
     // Entities that were inside the breath cone last tick
@@ -114,6 +114,7 @@ public class AirBreath extends AirAbility {
         this.cooldown = getConfig().getLong(CONFIG_ROOT_PATH + "Cooldown");
         this.growTime = getConfig().getLong(CONFIG_ROOT_PATH + "GrowTime");
         this.canExcavateSuspiciousBlocks = getConfig().getBoolean(CONFIG_ROOT_PATH + "CanExcavateSuspiciousBlocks");
+        this.tempBlockRevertTime = getConfig().getLong(CONFIG_ROOT_PATH + "TempBlockRevertTime");
 
         start();
     }
@@ -359,9 +360,9 @@ public class AirBreath extends AirAbility {
         if (block.getType() != Material.LAVA) return;
 
         if (block.getBlockData() instanceof Levelled levelled && levelled.getLevel() == 0) {
-            new TempBlock(block, Material.OBSIDIAN.createBlockData(), TEMP_BLOCK_DURATION, this);
+            new TempBlock(block, Material.OBSIDIAN.createBlockData(), tempBlockRevertTime, this);
         } else {
-            new TempBlock(block, Material.COBBLESTONE.createBlockData(), TEMP_BLOCK_DURATION, this);
+            new TempBlock(block, Material.COBBLESTONE.createBlockData(), tempBlockRevertTime, this);
         }
     }
 
@@ -373,7 +374,7 @@ public class AirBreath extends AirAbility {
 
         forEachBlockInRadius(center, getConeRadius(distance), block -> {
             if (isFireBlock(block)) {
-                new TempBlock(block, Material.AIR.createBlockData(), TEMP_BLOCK_DURATION, this);
+                new TempBlock(block, Material.AIR.createBlockData(), tempBlockRevertTime, this);
             }
         });
 
@@ -392,7 +393,7 @@ public class AirBreath extends AirAbility {
         BlockData unlitData = block.getBlockData();
         if (unlitData instanceof Candle candle) {
             candle.setLit(false);
-            new TempBlock(block, unlitData, TEMP_BLOCK_DURATION, this);
+            new TempBlock(block, unlitData, tempBlockRevertTime, this);
         }
     }
 
