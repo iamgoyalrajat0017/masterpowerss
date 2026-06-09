@@ -46,6 +46,19 @@ public class Lightning extends LightningAbility {
 	}
 
 	private static final int POINT_GENERATION = 5;
+	// ELECTRIC_SPARK exists in 1.21.11, but resolve it defensively once so a future registry
+	// rename can't throw an IllegalArgumentException inside powerLightningRods(). A null result
+	// means the particle is unavailable and is simply skipped.
+	private static final Particle ELECTRIC_SPARK_PARTICLE = resolveElectricSpark();
+
+	private static Particle resolveElectricSpark() {
+		try {
+			return Particle.valueOf("ELECTRIC_SPARK");
+		} catch (final IllegalArgumentException e) {
+			ProjectKorra.log.warning("Particle 'ELECTRIC_SPARK' is not available on this server version; lightning rod sparks will be skipped.");
+			return null;
+		}
+	}
 
 	@Attribute("Charged")
 	private boolean charged;
@@ -250,8 +263,10 @@ public class Lightning extends LightningAbility {
 	 */
 	private void powerLightningRods(final Block block) {
 		if (isLightningRod(block)) {
-			block.getWorld().spawnParticle(Particle.valueOf("ELECTRIC_SPARK"), block.getLocation().clone().add(0.5, 0.5, 0.5), 6, 0.125, 0.125, 0.125, 0.05);
-			
+			if (ELECTRIC_SPARK_PARTICLE != null) {
+				block.getWorld().spawnParticle(ELECTRIC_SPARK_PARTICLE, block.getLocation().clone().add(0.5, 0.5, 0.5), 6, 0.125, 0.125, 0.125, 0.05);
+			}
+
 			List<Block> blocks = new ArrayList<>();
 			Block down = block.getRelative(BlockFace.DOWN);
 			

@@ -28,6 +28,10 @@ public class LightManager {
     private final Map<Integer, BlockData> lightDataMap = new HashMap<>();
     private final Map<Integer, BlockData> waterloggedLightDataMap = new HashMap<>();
 
+    // Whether dynamic light is usable on this server version (i.e. the LIGHT material exists).
+    // If precomputeLightData() can't resolve LIGHT, this is set false and all light ops no-op.
+    private boolean enabled = true;
+
     // Scheduler with threads equal to the number of available processors, this handles reverting expired lights
     private ScheduledThreadPoolExecutor scheduler = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors());
 
@@ -83,7 +87,14 @@ public class LightManager {
      * respectively. This cuts down on computation time constantly manipulating BlockData.
      */
     private void precomputeLightData() {
-        BlockData lightData = Bukkit.createBlockData(Material.valueOf("LIGHT"));
+        final BlockData lightData;
+        try {
+            lightData = Bukkit.createBlockData(Material.valueOf("LIGHT"));
+        } catch (final IllegalArgumentException e) {
+            this.enabled = false;
+            ProjectKorra.log.warning("Material 'LIGHT' is not available on this server version; firebending dynamic light is disabled.");
+            return;
+        }
 
         for (int level = 1; level <= 15; level++) {
             ((Levelled) lightData).setLevel(level);
@@ -229,6 +240,7 @@ public class LightManager {
      * @param observers  the list of players who can see the light
      */
     private void addLight(Location location, int brightness, long expiry, Collection<? extends Player> observers) {
+        if (!enabled) return;
         location = location.getBlock().getLocation();
         long expiryTime = System.currentTimeMillis() + expiry;
 
