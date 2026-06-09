@@ -275,6 +275,9 @@ public class WhoCommand extends PKCommand {
 					if (bPlayer.hasSubElement(Element.BLUE_FIRE)) {
 						sender.sendMessage(Element.BLUE_FIRE.getColor() + "    Can use Blue Fire" + this.getTime(Element.BLUE_FIRE, bPlayer));
 					}
+					if (bPlayer.hasSubElement(Element.GREEN_FIRE)) {
+						sender.sendMessage(Element.GREEN_FIRE.getColor() + "    Can use Green Fire" + this.getTime(Element.GREEN_FIRE, bPlayer));
+					}
 					for (final SubElement se : Element.getAddonSubElements(Element.FIRE)) {
 						if (bPlayer.canUseSubElement(se)) {
 							sender.sendMessage(se.getColor() + "    Can " + (!se.getType().equals(ElementType.NO_SUFFIX) ? "" : "use ") + se.getName() + se.getType().getBend() + this.getTime(se, bPlayer));

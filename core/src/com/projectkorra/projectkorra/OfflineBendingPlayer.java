@@ -333,6 +333,9 @@ public class OfflineBendingPlayer {
                             if (split[0].contains("r")) {
                                 bPlayer.subelements.add(Element.BLUE_FIRE);
                             }
+                            if (split[0].contains("g")) {
+                                bPlayer.subelements.add(Element.GREEN_FIRE);
+                            }
                         }
                         if (hasAddon) {
                             final CopyOnWriteArrayList<String> addonClone = new CopyOnWriteArrayList<String>(Arrays.asList(split[split.length - 1].split(",")));
@@ -523,6 +526,9 @@ public class OfflineBendingPlayer {
             }
             if (this.hasSubElement(Element.BLUE_FIRE)) {
                 subs.append("r");
+            }
+            if (this.hasSubElement(Element.GREEN_FIRE)) {
+                subs.append("g");
             }
             boolean hasAddon = false;
             List<SubElement> addonSubs = Arrays.asList(Element.getAddonSubElements());

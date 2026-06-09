@@ -67,10 +67,11 @@ public class Element {
 	public static final SubElement LIGHTNING = new SubElement("Lightning", FIRE);
 	public static final SubElement COMBUSTION = new SubElement("Combustion", FIRE);
 	public static final SubElement BLUE_FIRE = new SubElement("BlueFire", FIRE);
+	public static final SubElement GREEN_FIRE = new SubElement("GreenFire", FIRE);
 
-	private static final Element[] ELEMENTS = { AIR, WATER, EARTH, FIRE, CHI, FLIGHT, SPIRITUAL, BLOOD, HEALING, ICE, PLANT, LAVA, METAL, SAND, LIGHTNING, COMBUSTION, BLUE_FIRE };
+	private static final Element[] ELEMENTS = { AIR, WATER, EARTH, FIRE, CHI, FLIGHT, SPIRITUAL, BLOOD, HEALING, ICE, PLANT, LAVA, METAL, SAND, LIGHTNING, COMBUSTION, BLUE_FIRE, GREEN_FIRE };
 	private static final Element[] MAIN_ELEMENTS = { AIR, WATER, EARTH, FIRE, CHI };
-	private static final SubElement[] SUB_ELEMENTS = { FLIGHT, SPIRITUAL, BLOOD, HEALING, ICE, PLANT, LAVA, METAL, SAND, LIGHTNING, COMBUSTION, BLUE_FIRE };
+	private static final SubElement[] SUB_ELEMENTS = { FLIGHT, SPIRITUAL, BLOOD, HEALING, ICE, PLANT, LAVA, METAL, SAND, LIGHTNING, COMBUSTION, BLUE_FIRE, GREEN_FIRE };
 
 	protected final String name;
 	protected final ElementType type;
@@ -203,7 +204,9 @@ public class Element {
 
 	@Override
 	public String toString() {
-		return (this == Element.BLUE_FIRE) ? this.getColor() + "Blue Fire": this.getColor() + this.getName();
+		if (this == Element.BLUE_FIRE) return this.getColor() + "Blue Fire";
+		if (this == Element.GREEN_FIRE) return this.getColor() + "Green Fire";
+		return this.getColor() + this.getName();
 	}
 
 	public static Element getElement(String name) {

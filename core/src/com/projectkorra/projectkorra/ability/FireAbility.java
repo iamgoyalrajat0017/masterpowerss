@@ -34,6 +34,30 @@ public abstract class FireAbility extends ElementalAbility {
 	private static final Map<Block, Player> SOURCE_PLAYERS = new ConcurrentHashMap<>();
 	private static final Set<BlockFace> IGNITE_FACES = new HashSet<>(Arrays.asList(BlockFace.EAST, BlockFace.WEST, BlockFace.NORTH, BlockFace.SOUTH, BlockFace.UP));
 
+	// Green fire is purely cosmetic: it swaps the firebending flame particle for the copper flame
+	// particle added in 1.21.11. The exact constant name is resolved defensively so this can't throw
+	// on versions/forks where it differs, falling back to FLAME if no copper flame particle exists.
+	private static final Particle GREEN_FIRE_PARTICLE = resolveGreenFireParticle();
+
+	private static Particle resolveGreenFireParticle() {
+		for (final String name : new String[] { "COPPER_FLAME", "COPPER_FIRE_FLAME" }) {
+			try {
+				return Particle.valueOf(name);
+			} catch (final IllegalArgumentException ignored) {
+			}
+		}
+		ProjectKorra.log.warning("No copper flame particle is available for Green Fire on this server version; falling back to FLAME.");
+		return Particle.FLAME;
+	}
+
+	/**
+	 * @return the particle used to render Green Fire flames (the 1.21.11 copper flame
+	 *         particle, or {@link Particle#FLAME} as a fallback).
+	 */
+	public static Particle getGreenFireParticle() {
+		return GREEN_FIRE_PARTICLE;
+	}
+
 	public FireAbility(final Player player) {
 		super(player);
 	}
@@ -255,6 +279,8 @@ public abstract class FireAbility extends ElementalAbility {
 	public void playFirebendingParticles(final Location loc, final int amount, final double xOffset, final double yOffset, final double zOffset) {
 		if (this.getBendingPlayer().canUseSubElement(SubElement.BLUE_FIRE)) {
 			loc.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, loc, amount, xOffset, yOffset, zOffset, 0, null, true);
+		} else if (this.getBendingPlayer().canUseSubElement(SubElement.GREEN_FIRE)) {
+			loc.getWorld().spawnParticle(GREEN_FIRE_PARTICLE, loc, amount, xOffset, yOffset, zOffset, 0, null, true);
 		} else {
 			loc.getWorld().spawnParticle(Particle.FLAME, loc, amount, xOffset, yOffset, zOffset, 0, null, true);
 		}
