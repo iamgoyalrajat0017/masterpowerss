@@ -17,7 +17,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "21" # or 17/11 to match your project
+          java-version: "25" # or 17/11 to match your project
 
       - name: Cache Maven
         uses: actions/cache@v4
