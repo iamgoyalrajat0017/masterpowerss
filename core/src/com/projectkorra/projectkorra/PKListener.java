@@ -1323,6 +1323,16 @@ public class PKListener implements Listener {
 			BlockSource.update(player, ClickType.SHIFT_DOWN);
 		}
 
+		Entity entity = GeneralMethods.getTargetedEntity(player, 3.5);
+
+		if(bPlayer.canBend(CoreAbility.getAbility(HeatControl.class))){
+
+			if(entity.getFireTicks() > 0){
+				entity.setFireTicks(0);
+			}
+
+		}
+
 		final CoreAbility ability = bPlayer.getBoundAbility();
 		if (ability == null || !ability.isSneakAbility()) {
 			if (PassiveManager.hasPassive(player, CoreAbility.getAbility(FerroControl.class))) {
