@@ -1323,6 +1323,9 @@ public class PKListener implements Listener {
 			BlockSource.update(player, ClickType.SHIFT_DOWN);
 		}
 
+
+
+
 		final CoreAbility ability = bPlayer.getBoundAbility();
 		if (ability == null || !ability.isSneakAbility()) {
 			if (PassiveManager.hasPassive(player, CoreAbility.getAbility(FerroControl.class))) {
