@@ -3,9 +3,7 @@ package com.projectkorra.projectkorra.ability;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
@@ -15,7 +13,7 @@ import com.projectkorra.projectkorra.ProjectKorra;
 import com.projectkorra.projectkorra.ability.util.Collision;
 import com.projectkorra.projectkorra.airbending.AirSpout;
 import com.projectkorra.projectkorra.airbending.Suffocate;
-import com.projectkorra.projectkorra.util.ParticleEffect;
+import org.bukkit.inventory.ItemStack;
 
 public abstract class AirAbility extends ElementalAbility {
 
@@ -42,7 +40,7 @@ public abstract class AirAbility extends ElementalAbility {
 	public void handleCollision(final Collision collision) {
 		super.handleCollision(collision);
 		if (collision.isRemovingFirst()) {
-			ParticleEffect.BLOCK_CRACK.display(collision.getLocationFirst(), 10, 1, 1, 1, 0.1, Material.WHITE_WOOL.createBlockData());
+			collision.getLocationFirst().getWorld().spawnParticle(Particle.BLOCK, collision.getLocationFirst(), 10, 1, 1, 1, 0.1, Material.WHITE_WOOL.createBlockData(), true);
 		}
 	}
 
@@ -71,20 +69,14 @@ public abstract class AirAbility extends ElementalAbility {
 	 *
 	 * @return Config specified ParticleEffect
 	 */
-	public static ParticleEffect getAirbendingParticles() {
-		final String particle = getConfig().getString("Properties.Air.Particles");
-		if (particle == null) {
-			return ParticleEffect.CLOUD;
-		} else if (particle.equalsIgnoreCase("spell")) {
-			return ParticleEffect.SPELL;
-		} else if (particle.equalsIgnoreCase("blacksmoke")) {
-			return ParticleEffect.SMOKE_NORMAL;
-		} else if (particle.equalsIgnoreCase("smoke")) {
-			return ParticleEffect.CLOUD;
-		} else if (particle.equalsIgnoreCase("smallsmoke")) {
-			return ParticleEffect.SNOW_SHOVEL;
-		} else {
-			return ParticleEffect.CLOUD;
+	public static Particle getAirbendingParticles() {
+		final String particle = getConfig().getString("Properties.Air.Particles").toUpperCase();
+
+		try {
+			return Particle.valueOf(particle);
+		} catch (IllegalArgumentException e) {
+			ProjectKorra.log.warning("Your current value for 'Properties.Air.Particles' is not valid. Returning to the default EFFECT particle.");
+			return Particle.EFFECT;
 		}
 	}
 
@@ -125,7 +117,20 @@ public abstract class AirAbility extends ElementalAbility {
 	 * @param zOffset The zOffset to use
 	 */
 	public static void playAirbendingParticles(final Location loc, final int amount, final double xOffset, final double yOffset, final double zOffset) {
-		getAirbendingParticles().display(loc, amount, xOffset, yOffset, zOffset);
+		Object particleData = switch (getAirbendingParticles().getDataType().getSimpleName()) {
+			case "Color" -> Color.WHITE;
+			case "BlockData" -> Material.WHITE_WOOL.createBlockData();
+			case "DustOptions" -> new Particle.DustOptions(Color.WHITE, 1.0f);
+			case "DustTransition" -> new Particle.DustTransition(Color.WHITE, Color.WHITE, 1.0f);
+			case "Float" -> 1.0f;
+			case "Integer" -> 1;
+			case "ItemStack" -> new ItemStack(Material.WHITE_WOOL);
+			case "Spell" -> new Particle.Spell(Color.WHITE, 1.0f);
+			case "Trail" -> new Particle.Trail(loc, Color.WHITE, 1);
+			case "Vibration" -> new Vibration(loc, new Vibration.Destination.BlockDestination(loc.getBlock()), 0);
+			default -> null;
+		};
+		loc.getWorld().spawnParticle(getAirbendingParticles(), loc, amount, xOffset, yOffset, zOffset, 0, particleData, true);
 	}
 
 	/**

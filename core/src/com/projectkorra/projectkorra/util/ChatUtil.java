@@ -4,6 +4,8 @@ import com.projectkorra.projectkorra.BendingPlayer;
 import com.projectkorra.projectkorra.ability.CoreAbility;
 import com.projectkorra.projectkorra.configuration.ConfigManager;
 import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -20,11 +22,36 @@ public class ChatUtil {
     /**
      * Send a message prefixed with the ProjectKorra branding to the provided receiver
      * @param receiver The person to send the message to
-     * @param message
+     * @param message The message to send
      */
     public static void sendBrandingMessage(final CommandSender receiver, final String message) {
         if (Strings.isEmpty(ChatColor.stripColor(message))) return;
 
+        sendBrandingMessage(receiver, TextComponent.fromLegacyText(color(message)));
+    }
+
+    /**
+     * Send a message prefixed with the ProjectKorra branding to the provided receiver
+     * @param receiver The person to send the message to
+     * @param message The message to send
+     */
+    public static void sendBrandingMessage(final CommandSender receiver, final BaseComponent[] message) {
+        if (message == null || message.length == 0) return;
+
+        BaseComponent newComp = new TextComponent();
+
+        for (BaseComponent comp : message) {
+            newComp.addExtra(comp);
+        }
+        sendBrandingMessage(receiver, newComp);
+    }
+
+    /**
+     * Send a message prefixed with the ProjectKorra branding to the provided receiver
+     * @param receiver The person to send the message to
+     * @param message The message to send
+     */
+    public static void sendBrandingMessage(final CommandSender receiver, final BaseComponent message) {
         ChatColor color;
         try {
             color = ChatColor.of(ConfigManager.languageConfig.get().getString("Chat.Branding.Color").toUpperCase());
@@ -37,7 +64,7 @@ public class ChatUtil {
         final String end = color(ConfigManager.languageConfig.get().getString("Chat.Branding.ChatPrefix.Suffix", " \u00BB "));
         final String prefix = color + start + main + end;
         if (!(receiver instanceof Player)) {
-            receiver.sendMessage(prefix + message);
+            receiver.sendMessage(prefix + message.toLegacyText());
         } else {
             final TextComponent prefixComponent = new TextComponent(prefix);
             final String hover = multiline(color + ConfigManager.languageConfig.get().getString("Chat.Branding.ChatPrefix.Hover", color + "Bending brought to you by ProjectKorra | Fork Roku!\n" + color + "Click for more info."));
@@ -51,18 +78,20 @@ public class ChatUtil {
                 }
                 prefixComponent.setClickEvent(new ClickEvent(action, click));
             }
-            final TextComponent messageComponent = new TextComponent(TextComponent.fromLegacyText(message, ChatColor.YELLOW));
+            final TextComponent messageComponent = new TextComponent(message);
+            messageComponent.setColor(ChatColor.YELLOW); //Set the base color to yellow
             ((Player) receiver).spigot().sendMessage(new TextComponent(prefixComponent, messageComponent));
         }
     }
 
     /**
-     * Colors a string with color codes and hex color codes. This also does &#RRGGBB codes which are not
+     * Colors a string with color codes and hex color codes. This also does &amp;#RRGGBB codes which are not
      * done by ChatColor's methods
      * @param string The string to color
      * @return The colored string
      */
     public static String color(String string) {
+        string = string == null ? "" : string; //Ensure no NullPointers
         return ChatColor.translateAlternateColorCodes('&', string.replaceAll("\\\\n", "\n")
                 .replaceAll("[\u00A7&]#([A-Fa-f\\d]{1})([A-Fa-f\\d]{1})([A-Fa-f\\d]{1})([A-Fa-f\\d]{1})([A-Fa-f\\d]{1})([A-Fa-f\\d]{1})",
                         "\u00A7x\u00A7$1\u00A7$2\u00A7$3\u00A7$4\u00A7$5\u00A7$6")); //Replaces &#RRGGBB to &x&R&R&B&B&G&G (how hex actually works)
@@ -122,7 +151,7 @@ public class ChatUtil {
             displayedMessage = "";
         }
 
-        ActionBar.sendActionBar(displayedMessage, player);
+        sendActionBar(displayedMessage, player);
     }
 
     /**
@@ -131,5 +160,17 @@ public class ChatUtil {
      */
     public static void displayMovePreview(final Player player) {
         displayMovePreview(player, player.getInventory().getHeldItemSlot() + 1);
+    }
+
+    /**
+     * Sends an action bar message to the player
+     *
+     * @param message the message to send
+     * @param player the player to send the message to
+     */
+    public static void sendActionBar(final String message, final Player... player) {
+        for (Player e : player) {
+            e.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(TextComponent.fromLegacyText(message)));
+        }
     }
 }

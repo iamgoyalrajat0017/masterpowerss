@@ -1,9 +1,9 @@
 name: ProjectKorra
 author: ProjectKorra
-api-version: 1.16
+api-version: 1.21.11
 version: ${project.version}
 main: com.projectkorra.projectkorra.ProjectKorra
-softdepend: [GriefDefender, WorldGuard, WorldEdit, Factions, GriefPrevention, Towny, NoCheatPlus, LWC, Residence, RedProtect, PlaceholderAPI, Lands]
+softdepend: [GriefDefender, WorldGuard, WorldEdit, Factions, GriefPrevention, Towny, NoCheatPlus, LWC, Residence, RedProtect, PlaceholderAPI, Lands, Plan, HuskTowns]
 commands:
   projectkorra:
     aliases: [b,bending,mtla,tla,korra,pk,bend]
@@ -19,13 +19,16 @@ permissions:
       bending.command.add.others: true
       bending.command.add: true
       bending.command.rechoose: true
+      bending.command.cooldown: true
+      bending.command.temp: true
       bending.admin.choose: true
       bending.command.choose.ignorecooldown: true
       bending.ability.AvatarState: true
       bending.water.bloodbending.anytime: true
       bending.water.bloodbending: true
       bending.fire.bluefire: true
-      bending.ability.Flight: true
+      bending.fire.bluefirefactor: true
+      bending.air.flight: true
       bending.ability.MetalClips.loot: true
       bending.ability.MetalClips.4clips: true
       bending.ability.MetalClips.throw: true
@@ -60,6 +63,8 @@ permissions:
       bending.command.preset.create: true
       bending.command.preset.bind: true
       bending.command.preset.delete: true
+      bending.command.preset.export: true
+      bending.command.preset.import: true
       bending.air: true
       bending.water: true
       bending.earth: true
@@ -84,7 +89,7 @@ permissions:
       bending.ability.Tornado: true
       bending.ability.AirCombo: true
       bending.air.passive: true
-      bending.air.flight: true
+      bending.ability.Flight: true
   bending.water:
     default: true
     description: Grants access to most waterbending abilities.
@@ -122,6 +127,7 @@ permissions:
       bending.ability.WaterArms.Freeze: true
       bending.ability.WaterArms.Spear: true
       bending.ability.Bottlebending: true
+      bending.water.nightfactor: true
   bending.earth:
     default: true
     description: Grants access to all Earthbending abilities.
@@ -177,6 +183,7 @@ permissions:
       bending.fire.passive: true
       bending.fire.lightningbending: true
       bending.fire.combustionbending: true
+      bending.fire.dayfactor: true
   bending.chi:
     default: true
     description: Grants access to all ChiBlocking abilities.

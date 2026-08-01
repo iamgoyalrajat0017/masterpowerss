@@ -4,8 +4,10 @@ import java.util.ArrayList;
 
 import com.projectkorra.projectkorra.ability.CoreAbility;
 import com.projectkorra.projectkorra.ability.util.ComboUtil;
+import com.projectkorra.projectkorra.attribute.markers.DayNightFactor;
 import com.projectkorra.projectkorra.configuration.ConfigManager;
 import org.bukkit.Location;
+import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
@@ -15,17 +17,16 @@ import com.projectkorra.projectkorra.ability.FireAbility;
 import com.projectkorra.projectkorra.ability.util.ComboManager.AbilityInformation;
 import com.projectkorra.projectkorra.attribute.Attribute;
 import com.projectkorra.projectkorra.firebending.FireJet;
-import com.projectkorra.projectkorra.util.ParticleEffect;
 import org.bukkit.util.Vector;
 
 public class JetBlast extends FireAbility implements ComboAbility {
 
-	@Attribute(Attribute.COOLDOWN)
+	@Attribute(Attribute.COOLDOWN) @DayNightFactor(invert = true)
 	private long cooldown;
-	@Attribute(Attribute.SPEED)
+	@Attribute(Attribute.SPEED) @DayNightFactor
 	private double speed;
 	private ArrayList<FireComboStream> tasks;
-	@Attribute(Attribute.DURATION)
+	@Attribute(Attribute.DURATION) @DayNightFactor
 	private long duration;
 
 	private final FireJet fireJet;
@@ -41,12 +42,8 @@ public class JetBlast extends FireAbility implements ComboAbility {
 
 		this.tasks = new ArrayList<>();
 		this.speed = getConfig().getDouble("Abilities.Fire.JetBlast.Speed");
-		this.cooldown = applyModifiersCooldown(getConfig().getLong("Abilities.Fire.JetBlast.Cooldown"));
+		this.cooldown = getConfig().getLong("Abilities.Fire.JetBlast.Cooldown");
 		this.duration = getConfig().getLong("Abilities.Fire.JetBlast.Duration");
-
-		if (this.bPlayer.isAvatarState()) {
-			this.cooldown = 0;
-		}
 
 		this.fireJet.setSpeed(speed);
 		this.fireJet.setDuration(duration);
@@ -56,7 +53,7 @@ public class JetBlast extends FireAbility implements ComboAbility {
 
 	private void playExplosion() {
 		final float spread = 0F;
-		ParticleEffect.EXPLOSION_LARGE.display(this.player.getLocation(), 1, spread, spread, spread, 0);
+		this.player.getWorld().spawnParticle(Particle.EXPLOSION, this.player.getLocation(), 1, spread, spread, spread, 0, null, true);
 		this.player.getWorld().playSound(this.player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 15, 0F);
 	}
 

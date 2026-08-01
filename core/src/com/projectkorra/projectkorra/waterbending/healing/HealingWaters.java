@@ -5,6 +5,7 @@ import com.projectkorra.projectkorra.ability.AirAbility;
 import com.projectkorra.projectkorra.ability.ElementalAbility;
 import com.projectkorra.projectkorra.ability.HealingAbility;
 import com.projectkorra.projectkorra.attribute.Attribute;
+import com.projectkorra.projectkorra.attribute.markers.DayNightFactor;
 import com.projectkorra.projectkorra.chiblocking.Smokescreen;
 import com.projectkorra.projectkorra.region.RegionProtection;
 import com.projectkorra.projectkorra.util.LightManager;
@@ -27,16 +28,16 @@ import java.util.HashMap;
 public class HealingWaters extends HealingAbility {
 
 	// Configurable Variables.
-	@Attribute(Attribute.COOLDOWN)
+	@Attribute(Attribute.COOLDOWN) @DayNightFactor(invert = true)
 	private long cooldown;
-	@Attribute(Attribute.RANGE)
+	@Attribute(Attribute.RANGE) @DayNightFactor
 	private double range;
 	private long interval;
-	@Attribute(Attribute.CHARGE_DURATION)
+	@Attribute(Attribute.CHARGE_DURATION) @DayNightFactor(invert = true)
 	private long chargeTime;
 	@Attribute("PotionPotency")
 	private int potionPotency;
-	@Attribute(Attribute.DURATION)
+	@Attribute(Attribute.DURATION) @DayNightFactor(invert = true)
 	private long duration;
 	private boolean enableParticles;
 	private boolean dynamicLighting;
@@ -81,10 +82,10 @@ public class HealingWaters extends HealingAbility {
 
 	public void setFields() {
 
-		this.cooldown = applyInverseModifiers(getConfig().getLong("Abilities.Water.HealingWaters.Cooldown"));
-		this.range = applyModifiers(getConfig().getDouble("Abilities.Water.HealingWaters.Range"));
+		this.cooldown = getConfig().getLong("Abilities.Water.HealingWaters.Cooldown");
+		this.range = getConfig().getDouble("Abilities.Water.HealingWaters.Range");
 		this.interval = getConfig().getLong("Abilities.Water.HealingWaters.Interval");
-		this.chargeTime = applyInverseModifiers(getConfig().getLong("Abilities.Water.HealingWaters.ChargeTime"));
+		this.chargeTime = getConfig().getLong("Abilities.Water.HealingWaters.ChargeTime");
 		this.potionPotency = getConfig().getInt("Abilities.Water.HealingWaters.PotionPotency");
 		this.duration = getConfig().getLong("Abilities.Water.HealingWaters.Duration");
 		this.enableParticles = getConfig().getBoolean("Abilities.Water.HealingWaters.EnableParticles");
@@ -190,7 +191,7 @@ public class HealingWaters extends HealingAbility {
 	}
 
 	private void giveHP(final Player player) {
-		if (!player.isDead() && player.getHealth() < player.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH).getValue()) {
+		if (!player.isDead() && player.getHealth() < player.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).getValue()) {
 			this.applyHealing(player);
 		} else {
 			this.healing = false;
@@ -207,7 +208,7 @@ public class HealingWaters extends HealingAbility {
 	}
 
 	private void giveHP(final LivingEntity livingEntity) {
-		if (!livingEntity.isDead() && livingEntity.getHealth() < livingEntity.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH).getValue()) {
+		if (!livingEntity.isDead() && livingEntity.getHealth() < livingEntity.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).getValue()) {
 			this.applyHealing(livingEntity);
 		} else {
 			this.healing = false;
@@ -230,7 +231,7 @@ public class HealingWaters extends HealingAbility {
 	}
 
 	private void applyHealing(final LivingEntity livingEntity) {
-		if (livingEntity.getHealth() < livingEntity.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH).getValue()) {
+		if (livingEntity.getHealth() < livingEntity.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).getValue()) {
 			livingEntity.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 30, this.potionPotency));
 			AirAbility.breakBreathbendingHold(livingEntity);
 			this.healing = true;

@@ -60,11 +60,24 @@ public class CooldownCommand extends PKCommand {
             return;
         }
 
-        OfflinePlayer oPlayer = list.size() == 1 ? (Player)sender : Bukkit.getOfflinePlayer(list.get(1));
-        if (!oPlayer.isOnline() && !oPlayer.hasPlayedBefore()) {
-            ChatUtil.sendBrandingMessage(sender, ChatColor.RED + ConfigManager.languageConfig.get().getString("Commands.Cooldown.InvalidPlayer"));
+        if (list.size() == 1) {
+            _execute(sender, list, (Player) sender);
             return;
         }
+
+        this.getPlayer(list.get(1)).thenAccept(oPlayer -> {
+            if (oPlayer == null || (!oPlayer.isOnline() && !oPlayer.hasPlayedBefore())) {
+                ChatUtil.sendBrandingMessage(sender, ChatColor.RED + ConfigManager.languageConfig.get().getString("Commands.Cooldown.InvalidPlayer"));
+                return;
+            }
+            _execute(sender, list, oPlayer);
+        }).exceptionally(e -> {
+            e.printStackTrace();
+            return null;
+        });;
+    }
+
+    public void _execute(CommandSender sender, List<String> list, OfflinePlayer oPlayer) {
 
         BendingPlayer.getOrLoadOfflineAsync(oPlayer).thenAccept(bPlayer -> {
             if (Arrays.asList(new String[] {"view", "v"}).contains(list.get(0).toLowerCase())) {
@@ -128,7 +141,8 @@ public class CooldownCommand extends PKCommand {
                 }
                 if (cooldown.equals("*") || cooldown.equalsIgnoreCase("ALL")) {
                     if (time == 0) {
-                        bPlayer.getCooldowns().keySet().forEach(bPlayer::removeCooldown); //We do this instead of clear() because we need to call the event
+                        Set<String> cooldownKeys = new HashSet<>(bPlayer.getCooldowns().keySet()); //Clone the list to prevent concurrentmodifications
+                        cooldownKeys.forEach(bPlayer::removeCooldown); //We do this instead of clear() because we need to call the event
                         bPlayer.saveCooldowns();
                         ChatUtil.sendBrandingMessage(sender, ChatColor.RED + ConfigManager.languageConfig.get().getString("Commands.Cooldown.ResetAll").replace("{player}", oPlayer.getName()));
                         return;
@@ -155,7 +169,8 @@ public class CooldownCommand extends PKCommand {
                     return;
                 }
                 if (cooldown.equals("*") || cooldown.equalsIgnoreCase("ALL")) {
-                    bPlayer.getCooldowns().keySet().forEach(bPlayer::removeCooldown); //We do this instead of clear() because we need to call the event
+                    Set<String> cooldownKeys = new HashSet<>(bPlayer.getCooldowns().keySet()); //Clone the list to prevent concurrentmodifications
+                    cooldownKeys.forEach(bPlayer::removeCooldown); //We do this instead of clear() because we need to call the event
                     bPlayer.saveCooldowns();
                     ChatUtil.sendBrandingMessage(sender, ChatColor.GREEN + ConfigManager.languageConfig.get().getString("Commands.Cooldown.ResetAll").replace("{player}", oPlayer.getName()));
                     return;
@@ -170,6 +185,9 @@ public class CooldownCommand extends PKCommand {
                         oPlayer.getName()).replace("{cooldown}", fixedCooldown);
                 ChatUtil.sendBrandingMessage(sender, ChatColor.GREEN + message);
             }
+        }).exceptionally(e -> {
+            e.printStackTrace();
+            return null;
         });
     }
 
@@ -180,12 +198,10 @@ public class CooldownCommand extends PKCommand {
             return null;
         }
 
-        boolean cancelled = false;
-        if (bPlayer.getPlayer().isOnline()) {
-            final PlayerCooldownChangeEvent event = new PlayerCooldownChangeEvent(((BendingPlayer)bPlayer).getPlayer(), cooldown, time, time <= 0 ? PlayerCooldownChangeEvent.Result.REMOVED : PlayerCooldownChangeEvent.Result.SET);
-            Bukkit.getServer().getPluginManager().callEvent(event);
-            cancelled = event.isCancelled();
-        }
+        final PlayerCooldownChangeEvent event = new PlayerCooldownChangeEvent((bPlayer).getPlayer(), cooldown, time, time <= 0 ? PlayerCooldownChangeEvent.Result.REMOVED : PlayerCooldownChangeEvent.Result.SET);
+        Bukkit.getServer().getPluginManager().callEvent(event);
+        boolean cancelled = event.isCancelled();
+
 
         if (!cancelled) {
             if (time <= 0) {

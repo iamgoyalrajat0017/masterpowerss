@@ -7,6 +7,7 @@ import java.util.Random;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Entity;
@@ -22,7 +23,6 @@ import com.projectkorra.projectkorra.attribute.Attribute;
 import com.projectkorra.projectkorra.command.Commands;
 import com.projectkorra.projectkorra.util.ClickType;
 import com.projectkorra.projectkorra.util.DamageHandler;
-import com.projectkorra.projectkorra.util.ParticleEffect;
 import com.projectkorra.projectkorra.util.TempBlock;
 
 public class EarthSmash extends EarthAbility {
@@ -60,7 +60,7 @@ public class EarthSmash extends EarthAbility {
 	private double shootRange;
 	@Attribute("Min" + Attribute.DAMAGE)
 	private double minDamage;
-	@Attribute("Max" + Attribute.DAMAGE)
+	@Attribute(Attribute.DAMAGE)
 	private double maxDamage;
 	@Attribute(Attribute.KNOCKBACK)
 	private double knockback;
@@ -169,19 +169,6 @@ public class EarthSmash extends EarthAbility {
 		this.cooldown = getConfig().getLong("Abilities.Earth.EarthSmash.Cooldown");
 		this.flightDuration = getConfig().getLong("Abilities.Earth.EarthSmash.Flight.Duration");
 		this.duration = getConfig().getLong("Abilities.Earth.EarthSmash.Duration");
-
-		if (bPlayer.isAvatarState()) {
-			this.selectRange = getConfig().getDouble("Abilities.Avatar.AvatarState.Earth.EarthSmash.SelectRange");
-			this.grabRange = getConfig().getDouble("Abilities.Avatar.AvatarState.Earth.EarthSmash.GrabRange");
-			this.chargeTime = getConfig().getLong("Abilities.Avatar.AvatarState.Earth.EarthSmash.ChargeTime");
-			this.cooldown = getConfig().getLong("Abilities.Avatar.AvatarState.Earth.EarthSmash.Cooldown");
-			this.minDamage = getConfig().getDouble("Abilities.Avatar.AvatarState.Earth.EarthSmash.MinimumDamage");
-			this.maxDamage = getConfig().getDouble("Abilities.Avatar.AvatarState.Earth.EarthSmash.MaximumDamage");
-			this.knockback = getConfig().getDouble("Abilities.Avatar.AvatarState.Earth.EarthSmash.Knockback");
-			this.flightSpeed = getConfig().getDouble("Abilities.Avatar.AvatarState.Earth.EarthSmash.FlightSpeed");
-			this.flightDuration = getConfig().getLong("Abilities.Avatar.AvatarState.Earth.EarthSmash.FlightTimer");
-			this.shootRange = getConfig().getDouble("Abilities.Avatar.AvatarState.Earth.EarthSmash.ShootRange");
-		}
 	}
 
 	@Override
@@ -227,7 +214,7 @@ public class EarthSmash extends EarthAbility {
 			} else if (System.currentTimeMillis() - this.getStartTime() > this.chargeTime) {
 				final Location tempLoc = this.player.getEyeLocation().add(this.player.getEyeLocation().getDirection().normalize().multiply(1.2));
 				tempLoc.add(0, 0.3, 0);
-				ParticleEffect.SMOKE_NORMAL.display(tempLoc, 4, 0.3, 0.1, 0.3, 0);
+				tempLoc.getWorld().spawnParticle(Particle.SMOKE, tempLoc, 4, 0.3, 0.1, 0.3, 0, null, true);
 			}
 		} else if (this.state == State.LIFTING) {
 			if (System.currentTimeMillis() - this.delay >= this.liftAnimationInterval) {
@@ -469,7 +456,7 @@ public class EarthSmash extends EarthAbility {
 			final BlockRepresenter brep = this.currentBlocks.get(i);
 			final Block block = this.location.clone().add(brep.getX(), brep.getY(), brep.getZ()).getBlock();
 			// Check for grass because sometimes the dirt turns into grass.
-			if (block.getType() != brep.getType() && (block.getType() != Material.GRASS) && (block.getType() != Material.COBBLESTONE)) {
+			if (block.getType() != brep.getType() && (block.getType() != Material.GRASS_BLOCK) && (block.getType() != Material.COBBLESTONE)) {
 				this.currentBlocks.remove(i);
 				i--;
 			}

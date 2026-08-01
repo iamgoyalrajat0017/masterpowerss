@@ -1,7 +1,11 @@
 package com.projectkorra.projectkorra.waterbending.multiabilities;
 
+import com.projectkorra.projectkorra.Element;
+import com.projectkorra.projectkorra.attribute.markers.DayNightFactor;
+import com.projectkorra.projectkorra.util.ActionBar;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.block.Block;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
@@ -16,7 +20,6 @@ import com.projectkorra.projectkorra.ability.IceAbility;
 import com.projectkorra.projectkorra.attribute.Attribute;
 import com.projectkorra.projectkorra.command.Commands;
 import com.projectkorra.projectkorra.util.DamageHandler;
-import com.projectkorra.projectkorra.util.ParticleEffect;
 import com.projectkorra.projectkorra.util.TempBlock;
 import com.projectkorra.projectkorra.util.TempPotionEffect;
 import com.projectkorra.projectkorra.waterbending.multiabilities.WaterArms.Arm;
@@ -25,12 +28,12 @@ public class WaterArmsFreeze extends IceAbility {
 
 	private boolean cancelled;
 	private boolean usageCooldownEnabled;
-	@Attribute(Attribute.RANGE)
+	@Attribute(Attribute.RANGE) @DayNightFactor
 	private double iceRange;
 	private int distanceTravelled;
-	@Attribute(Attribute.DAMAGE)
+	@Attribute(Attribute.DAMAGE) @DayNightFactor
 	private double iceDamage;
-	@Attribute(Attribute.COOLDOWN)
+	@Attribute(Attribute.COOLDOWN) @DayNightFactor(invert = true)
 	private long usageCooldown;
 	private Arm arm;
 	private Location location;
@@ -41,9 +44,9 @@ public class WaterArmsFreeze extends IceAbility {
 		super(player);
 
 		this.usageCooldownEnabled = getConfig().getBoolean("Abilities.Water.WaterArms.Arms.Cooldowns.UsageCooldown.Enabled");
-		this.iceRange = applyModifiers(getConfig().getDouble("Abilities.Water.WaterArms.Freeze.Range"));
-		this.iceDamage = applyModifiers(getConfig().getInt("Abilities.Water.WaterArms.Freeze.Damage"));
-		this.usageCooldown = applyInverseModifiers(getConfig().getLong("Abilities.Water.WaterArms.Arms.Cooldowns.UsageCooldown.Freeze"));
+		this.iceRange = getConfig().getDouble("Abilities.Water.WaterArms.Freeze.Range");
+		this.iceDamage = getConfig().getInt("Abilities.Water.WaterArms.Freeze.Damage");
+		this.usageCooldown = getConfig().getLong("Abilities.Water.WaterArms.Arms.Cooldowns.UsageCooldown.Freeze");
 		this.direction = player.getEyeLocation().getDirection();
 
 		this.createInstance();
@@ -106,6 +109,7 @@ public class WaterArmsFreeze extends IceAbility {
 					this.waterArms.setRightArmCooldown(false);
 				}
 				this.waterArms.setMaxIceBlasts(this.waterArms.getMaxIceBlasts() - 1);
+				ActionBar.sendActionBar(Element.WATER.getSubColor() + "Ice Blasts Left: " + this.waterArms.getMaxIceBlasts(), this.player);
 			}
 		}
 
@@ -126,7 +130,7 @@ public class WaterArmsFreeze extends IceAbility {
 	}
 
 	private void progressIce() {
-		ParticleEffect.SNOW_SHOVEL.display(this.location, 5, Math.random(), Math.random(), Math.random(), 0.05);
+		this.location.getWorld().spawnParticle(Particle.ITEM_SNOWBALL, this.location, 5, Math.random(), Math.random(), Math.random(), 0.05, null, true);
 		new TempBlock(this.location.getBlock(), Material.ICE.createBlockData(), this).setCanSuffocate(false).setRevertTime(10);
 
 		for (final Entity entity : GeneralMethods.getEntitiesAroundPoint(this.location, 2.5)) {
@@ -135,7 +139,7 @@ public class WaterArmsFreeze extends IceAbility {
 					continue;
 				}
 				DamageHandler.damageEntity(entity, this.iceDamage, this);
-				final PotionEffect effect = new PotionEffect(PotionEffectType.SLOW, 40, 2);
+				final PotionEffect effect = new PotionEffect(PotionEffectType.SLOWNESS, 40, 2);
 				new TempPotionEffect((LivingEntity) entity, effect);
 				this.remove();
 				return;
@@ -162,6 +166,7 @@ public class WaterArmsFreeze extends IceAbility {
 					this.waterArms.setRightArmCooldown(false);
 				}
 				this.waterArms.setMaxIceBlasts(this.waterArms.getMaxIceBlasts() - 1);
+				ActionBar.sendActionBar(Element.WATER.getSubColor() + "Ice Blasts Left: " + this.waterArms.getMaxIceBlasts(), this.player);
 			}
 		}
 	}

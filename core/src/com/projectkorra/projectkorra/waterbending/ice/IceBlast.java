@@ -3,8 +3,10 @@ package com.projectkorra.projectkorra.waterbending.ice;
 import java.util.ArrayList;
 import java.util.Random;
 
+import com.projectkorra.projectkorra.attribute.markers.DayNightFactor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
@@ -23,7 +25,6 @@ import com.projectkorra.projectkorra.attribute.Attribute;
 import com.projectkorra.projectkorra.util.BlockSource;
 import com.projectkorra.projectkorra.util.ClickType;
 import com.projectkorra.projectkorra.util.DamageHandler;
-import com.projectkorra.projectkorra.util.ParticleEffect;
 import com.projectkorra.projectkorra.util.TempBlock;
 import com.projectkorra.projectkorra.util.TempPotionEffect;
 import com.projectkorra.projectkorra.waterbending.util.WaterReturn;
@@ -35,15 +36,17 @@ public class IceBlast extends IceAbility {
 	private boolean progressing;
 	private byte data;
 	private long time;
-	@Attribute(Attribute.COOLDOWN)
+	@Attribute(Attribute.COOLDOWN) @DayNightFactor(invert = true)
 	private long cooldown;
+	@Attribute("Slow" + Attribute.COOLDOWN) @DayNightFactor(invert = true)
+	private long slowCooldown;
 	private long interval;
-	@Attribute(Attribute.RANGE)
+	@Attribute(Attribute.RANGE) @DayNightFactor
 	private double range;
-	@Attribute(Attribute.DAMAGE)
+	@Attribute(Attribute.DAMAGE) @DayNightFactor
 	private double damage;
 	private double collisionRadius;
-	@Attribute("Deflect" + Attribute.RANGE)
+	@Attribute("Deflect" + Attribute.RANGE) @DayNightFactor
 	private double deflectRange;
 	private Block sourceBlock;
 	private Location location;
@@ -58,20 +61,15 @@ public class IceBlast extends IceAbility {
 		this.data = 0;
 		this.interval = getConfig().getLong("Abilities.Water.IceBlast.Interval");
 		this.collisionRadius = getConfig().getDouble("Abilities.Water.IceBlast.CollisionRadius");
-		this.deflectRange = applyModifiers(getConfig().getDouble("Abilities.Water.IceBlast.DeflectRange"));
-		this.range = applyModifiers(getConfig().getDouble("Abilities.Water.IceBlast.Range"));
-		this.damage = applyModifiers(getConfig().getInt("Abilities.Water.IceBlast.Damage"));
-		this.cooldown = applyInverseModifiers(getConfig().getInt("Abilities.Water.IceBlast.Cooldown"));
+		this.deflectRange = getConfig().getDouble("Abilities.Water.IceBlast.DeflectRange");
+		this.range = getConfig().getDouble("Abilities.Water.IceBlast.Range");
+		this.damage = getConfig().getInt("Abilities.Water.IceBlast.Damage");
+		this.cooldown = getConfig().getInt("Abilities.Water.IceBlast.Cooldown");
+		this.slowCooldown = getConfig().getLong("Abilities.Water.IceBlast.SlowCooldown");
 		this.allowSnow = getConfig().getBoolean("Abilities.Water.IceBlast.AllowSnow");
 
 		if (!this.bPlayer.canBend(this) || !this.bPlayer.canIcebend()) {
 			return;
-		}
-
-		if (this.bPlayer.isAvatarState()) {
-			this.cooldown = getConfig().getLong("Abilities.Avatar.AvatarState.Water.IceBlast.Cooldown");
-			this.range = getConfig().getDouble("Abilities.Avatar.AvatarState.Water.IceBlast.Range");
-			this.damage = getConfig().getInt("Abilities.Avatar.AvatarState.Water.IceBlast.Damage");
 		}
 
 		block(player);
@@ -164,22 +162,21 @@ public class IceBlast extends IceAbility {
 	}
 
 	private void affect(final LivingEntity entity) {
+		DamageHandler.damageEntity(entity, this.damage, this);
 		if (entity instanceof Player) {
 			if (this.bPlayer.canBeSlowed()) {
-				final PotionEffect effect = new PotionEffect(PotionEffectType.SLOW, 70, 2);
+				final PotionEffect effect = new PotionEffect(PotionEffectType.SLOWNESS, 70, 2);
 				new TempPotionEffect(entity, effect);
-				this.bPlayer.slow(10);
-				DamageHandler.damageEntity(entity, this.damage, this);
+				this.bPlayer.slow(this.slowCooldown);
 			}
 		} else {
-			final PotionEffect effect = new PotionEffect(PotionEffectType.SLOW, 70, 2);
+			final PotionEffect effect = new PotionEffect(PotionEffectType.SLOWNESS, 70, 2);
 			new TempPotionEffect(entity, effect);
-			DamageHandler.damageEntity(entity, this.damage, this);
 		}
 		AirAbility.breakBreathbendingHold(entity);
 
 		for (int x = 0; x < 30; x++) {
-			ParticleEffect.ITEM_CRACK.display(this.location, 5, Math.random() / 4, Math.random() / 4, Math.random() / 4, new ItemStack(Material.ICE));
+			this.location.getWorld().spawnParticle(Particle.ITEM, this.location, 5, Math.random() / 4, Math.random() / 4, Math.random() / 4, 0, new ItemStack(Material.ICE), true);
 		}
 	}
 
@@ -318,8 +315,8 @@ public class IceBlast extends IceAbility {
 			}
 
 			for (int x = 0; x < 10; x++) {
-				ParticleEffect.ITEM_CRACK.display(this.location, 5, Math.random() / 2, Math.random() / 2, Math.random() / 2, new ItemStack(Material.ICE));
-				ParticleEffect.SNOW_SHOVEL.display(this.location, 5, Math.random() / 2, Math.random() / 2, Math.random() / 2, 0);
+				this.location.getWorld().spawnParticle(Particle.ITEM, this.location, 5, Math.random() / 2, Math.random() / 2, Math.random() / 2, 0, new ItemStack(Material.ICE), true);
+				this.location.getWorld().spawnParticle(Particle.ITEM_SNOWBALL, this.location, 5, Math.random() / 2, Math.random() / 2, Math.random() / 2, 0, null, true);
 			}
 			if ((new Random()).nextInt(4) == 0) {
 				playIcebendingSound(this.location);
@@ -332,8 +329,8 @@ public class IceBlast extends IceAbility {
 
 	public void breakParticles(final int amount) {
 		for (int x = 0; x < amount; x++) {
-			ParticleEffect.ITEM_CRACK.display(this.location, 2, Math.random(), Math.random(), Math.random(), new ItemStack(Material.ICE));
-			ParticleEffect.SNOW_SHOVEL.display(this.location, 2, Math.random(), Math.random(), Math.random(), 0);
+			this.location.getWorld().spawnParticle(Particle.ITEM, this.location, 2, Math.random(), Math.random(), Math.random(), 0, new ItemStack(Material.ICE), true);
+			this.location.getWorld().spawnParticle(Particle.ITEM_SNOWBALL, this.location, 2, Math.random(), Math.random(), Math.random(), 0, null, true);
 		}
 		this.location.getWorld().playSound(this.location, Sound.BLOCK_GLASS_BREAK, 5, 1.3f);
 	}
@@ -454,6 +451,7 @@ public class IceBlast extends IceAbility {
 		this.deflectRange = deflectRange;
 	}
 
+	@Override
 	public Block getSourceBlock() {
 		return this.sourceBlock;
 	}
@@ -492,6 +490,14 @@ public class IceBlast extends IceAbility {
 
 	public void setLocation(final Location location) {
 		this.location = location;
+	}
+	
+	public long getSlowCooldown() {
+		return this.slowCooldown;
+	}
+
+	public void setSlowCooldown(final long slowCooldown) {
+		this.slowCooldown = slowCooldown;
 	}
 
 }

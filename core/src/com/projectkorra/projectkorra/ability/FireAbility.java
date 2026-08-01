@@ -7,11 +7,11 @@ import com.projectkorra.projectkorra.ProjectKorra;
 import com.projectkorra.projectkorra.ability.util.Collision;
 import com.projectkorra.projectkorra.configuration.ConfigManager;
 import com.projectkorra.projectkorra.util.LightManager;
-import com.projectkorra.projectkorra.util.ParticleEffect;
 import com.projectkorra.projectkorra.util.TempBlock;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -57,7 +57,7 @@ public abstract class FireAbility extends ElementalAbility {
 	public void handleCollision(final Collision collision) {
 		super.handleCollision(collision);
 		if (collision.isRemovingFirst()) {
-			ParticleEffect.BLOCK_CRACK.display(collision.getLocationFirst(), 10, 1, 1, 1, 0.1, getFireType().createBlockData());
+			collision.getLocationFirst().getWorld().spawnParticle(Particle.BLOCK, collision.getLocationFirst(), 10, 1, 1, 1, 0.1, getFireType().createBlockData(), true);
 		}
 	}
 	/**
@@ -164,6 +164,30 @@ public abstract class FireAbility extends ElementalAbility {
 		return fire;
 	}
 
+	public static void dryWetBlocks(final Block block, final CoreAbility ability, boolean playSound) {
+		if (GeneralMethods.isRegionProtectedFromBuild(ability, block.getLocation())) {
+			return;
+		}
+		if (block.getType() == Material.WET_SPONGE) {
+			block.setType(Material.SPONGE);
+
+			if (playSound) {
+				block.getWorld().playSound(block.getLocation(), Sound.BLOCK_FIRE_EXTINGUISH, 0.5F, 1);
+			}
+		} else if (isSnow(block)) {
+			block.getWorld().spawnParticle(Particle.BLOCK, block.getLocation().add(0.5, 0.5, 0.5), 2, 0.5, 0.5, 0.5, 0.1, Material.SNOW_BLOCK.createBlockData());
+			block.setType(Material.AIR);
+
+			if (playSound) {
+				block.getWorld().playSound(block.getLocation(), Sound.BLOCK_SNOW_BREAK, 1, 1);
+			}
+		}
+	}
+
+	public static void dryWetBlocks(final Block block, final CoreAbility ability) {
+		dryWetBlocks(block, ability, false);
+	}
+
 	/**
 	 * This method was used for the old collision detection system. Please see
 	 * {@link Collision} for the new system.
@@ -230,9 +254,9 @@ public abstract class FireAbility extends ElementalAbility {
 
 	public void playFirebendingParticles(final Location loc, final int amount, final double xOffset, final double yOffset, final double zOffset) {
 		if (this.getBendingPlayer().canUseSubElement(SubElement.BLUE_FIRE)) {
-			ParticleEffect.SOUL_FIRE_FLAME.display(loc, amount, xOffset, yOffset, zOffset);
+			loc.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, loc, amount, xOffset, yOffset, zOffset, 0, null, true);
 		} else {
-			ParticleEffect.FLAME.display(loc, amount, xOffset, yOffset, zOffset);
+			loc.getWorld().spawnParticle(Particle.FLAME, loc, amount, xOffset, yOffset, zOffset, 0, null, true);
 		}
 	}
 
@@ -314,6 +338,7 @@ public abstract class FireAbility extends ElementalAbility {
 	 * @return The modified value
 	 */
 	@Override
+	@Deprecated
 	public double applyModifiers(double value) {
 		return GeneralMethods.applyModifiers(value, getDayFactor(1.0));
 	}
@@ -323,6 +348,7 @@ public abstract class FireAbility extends ElementalAbility {
 	 * @param value The value to modify
 	 * @return The modified value
 	 */
+	@Deprecated
 	public double applyInverseModifiers(double value) {
 		return GeneralMethods.applyInverseModifiers(value, getDayFactor(1.0));
 	}
@@ -332,6 +358,7 @@ public abstract class FireAbility extends ElementalAbility {
 	 * @param value The value to modify
 	 * @return The modified value
 	 */
+	@Deprecated
 	public double applyModifiersDamage(double value) {
 		return GeneralMethods.applyModifiers(value, getDayFactor(1.0), bPlayer.hasElement(Element.BLUE_FIRE) ? getConfig().getDouble("Properties.Fire.BlueFire.DamageFactor", 1.1) : 1);
 	}
@@ -341,6 +368,7 @@ public abstract class FireAbility extends ElementalAbility {
 	 * @param value The value to modify
 	 * @return The modified value
 	 */
+	@Deprecated
 	public double applyModifiersRange(double value) {
 		return GeneralMethods.applyModifiers(value, getDayFactor(1.0), bPlayer.hasElement(Element.BLUE_FIRE) ? getConfig().getDouble("Properties.Fire.BlueFire.RangeFactor", 1.2) : 1);
 	}
@@ -350,6 +378,7 @@ public abstract class FireAbility extends ElementalAbility {
 	 * @param value The value to modify
 	 * @return The modified value
 	 */
+	@Deprecated
 	public long applyModifiersCooldown(long value) {
 		return (long) GeneralMethods.applyInverseModifiers(value, getDayFactor(1.0), bPlayer.hasElement(Element.BLUE_FIRE) ? 1 / getConfig().getDouble("Properties.Fire.BlueFire.CooldownFactor", 0.9) : 1);
 	}

@@ -69,11 +69,6 @@ public class EarthBlast extends EarthAbility {
 		this.time = System.currentTimeMillis();
 		this.interval = (long) (1000.0 / this.speed);
 
-		if (this.bPlayer.isAvatarState()) {
-			this.cooldown = getConfig().getLong("Abilities.Avatar.AvatarState.Earth.EarthBlast.Cooldown");
-			this.damage = getConfig().getDouble("Abilities.Avatar.AvatarState.Earth.EarthBlast.Damage");
-		}
-
 		if (this.prepare()) {
 			this.start();
 			this.time = System.currentTimeMillis();
@@ -171,6 +166,11 @@ public class EarthBlast extends EarthAbility {
 		}
 
 		if (selectedABlockInUse) {
+			return false;
+		}
+
+		// prevents duplication when using earthblast on blocks moved by other abilities (see bug #1376)
+		if (getMovedEarth().containsKey(block) && (RaiseEarth.blockInAllAffectedBlocks(block) || Collapse.blockInAllAffectedBlocks(block))) {
 			return false;
 		}
 
@@ -298,6 +298,8 @@ public class EarthBlast extends EarthAbility {
 					this.sourceBlock.setType(this.sourceType);
 
 					moveEarthBlock(this.sourceBlock, block);
+					getMovedEarth().remove(this.sourceBlock);
+					getMovedEarth().remove(block);
 
 					if (block.getType() == Material.SAND) {
 						block.setType(Material.SANDSTONE);
@@ -357,7 +359,12 @@ public class EarthBlast extends EarthAbility {
 			return;
 		}
 
+		// prevents duplication
 		if (getMovedEarth().containsKey(this.sourceBlock)) {
+			if (RaiseEarth.blockInAllAffectedBlocks(this.sourceBlock) || Collapse.blockInAllAffectedBlocks(this.sourceBlock)) {
+				return;
+			}
+
 			if (!isEarthRevertOn()) {
 				removeRevertIndex(this.sourceBlock);
 			}
@@ -665,6 +672,7 @@ public class EarthBlast extends EarthAbility {
 		this.firstDestination = firstDestination;
 	}
 
+	@Override
 	public Block getSourceBlock() {
 		return this.sourceBlock;
 	}

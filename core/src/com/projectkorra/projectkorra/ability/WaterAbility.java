@@ -1,14 +1,12 @@
 package com.projectkorra.projectkorra.ability;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import com.projectkorra.projectkorra.region.RegionProtection;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Sound;
-import org.bukkit.Tag;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.Levelled;
@@ -22,7 +20,6 @@ import com.projectkorra.projectkorra.ProjectKorra;
 import com.projectkorra.projectkorra.ability.util.Collision;
 import com.projectkorra.projectkorra.firebending.HeatControl;
 import com.projectkorra.projectkorra.util.BlockSource;
-import com.projectkorra.projectkorra.util.ParticleEffect;
 import com.projectkorra.projectkorra.util.TempBlock;
 import com.projectkorra.projectkorra.waterbending.SurgeWall;
 import com.projectkorra.projectkorra.waterbending.SurgeWave;
@@ -32,6 +29,7 @@ import com.projectkorra.projectkorra.waterbending.ice.PhaseChange;
 import com.projectkorra.projectkorra.waterbending.multiabilities.WaterArms;
 
 public abstract class WaterAbility extends ElementalAbility {
+	public static final Map<Material, Material> WATER_TRANSFORMABLE_BLOCKS = getWaterTransformableBlocks();
 
 	public WaterAbility(final Player player) {
 		super(player);
@@ -72,11 +70,15 @@ public abstract class WaterAbility extends ElementalAbility {
 		return false;
 	}
 
+	public Block getSourceBlock() {
+		return null;
+	}
+
 	@Override
 	public void handleCollision(final Collision collision) {
 		super.handleCollision(collision);
 		if (collision.isRemovingFirst()) {
-			ParticleEffect.BLOCK_CRACK.display(collision.getLocationFirst(), 10, 1, 1, 1, 0.1, collision.getLocationFirst().getBlock().getBlockData());
+			collision.getLocationFirst().getWorld().spawnParticle(Particle.BLOCK, collision.getLocationFirst(), 10, 1, 1, 1, 0.1, collision.getLocationFirst().getBlock().getBlockData(), true);
 		}
 	}
 
@@ -89,7 +91,9 @@ public abstract class WaterAbility extends ElementalAbility {
 	}
 
 	public static boolean isBendableWaterTempBlock(final TempBlock tempBlock) {
-		return PhaseChange.getFrozenBlocksMap().containsKey(tempBlock) || HeatControl.getMeltedBlocks().contains(tempBlock) || SurgeWall.SOURCE_BLOCKS.contains(tempBlock) || Torrent.getFrozenBlocks().containsKey(tempBlock);
+		boolean legacyDetection = PhaseChange.getFrozenBlocksMap().containsKey(tempBlock) || HeatControl.getMeltedBlocks().contains(tempBlock)
+				|| SurgeWall.SOURCE_BLOCKS.contains(tempBlock) || Torrent.getFrozenBlocks().containsKey(tempBlock);
+		return (tempBlock.isBendableSource() && isWaterbendable(tempBlock.getBlock().getType())) || legacyDetection;
 	}
 
 	public boolean isIcebendable(final Block block) {
@@ -129,7 +133,7 @@ public abstract class WaterAbility extends ElementalAbility {
 	}
 
 	public static boolean isWaterbendable(final Material material) {
-		return isWater(material) || isIce(material) || isPlant(material) || isSnow(material) || isCauldron(material);
+		return isWater(material) || isIce(material) || isPlant(material) || isSnow(material) || isCauldron(material) || isMud(material) || isSponge(material);
 	}
 
 	public static Block getIceSourceBlock(final Player player, final double range) {
@@ -221,7 +225,7 @@ public abstract class WaterAbility extends ElementalAbility {
 
 		for (double i = 0; i <= range; i++) {
 			final Block block = location.clone().add(vector.clone().multiply(i)).getBlock();
-			if ((!isTransparent(player, block) && !isIce(block) && !isPlant(block) && !isSnow(block) && !isCauldron(block)) || RegionProtection.isRegionProtected(player, location, "WaterManipulation")) {
+			if ((!isTransparent(player, block) && !isIce(block) && !isPlant(block) && !isSnow(block) && !isCauldron(block) && !isMud(block) && !isSponge(block)) || RegionProtection.isRegionProtected(player, location, "WaterManipulation")) {
 				continue;
 			} else if (isWaterbendable(player, null, block) && (!isPlant(block) || plantbending)) {
 				if (TempBlock.isTempBlock(block) && !isBendableWaterTempBlock(block)) {
@@ -234,9 +238,8 @@ public abstract class WaterAbility extends ElementalAbility {
 	}
 
 	public static boolean isAdjacentToFrozenBlock(final Block block) {
-		final BlockFace[] faces = { BlockFace.DOWN, BlockFace.UP, BlockFace.NORTH, BlockFace.EAST, BlockFace.WEST, BlockFace.SOUTH };
 		boolean adjacent = false;
-		for (final BlockFace face : faces) {
+		for (final BlockFace face : GeneralMethods.ADJACENT_FACES) {
 			if (PhaseChange.getFrozenBlocksAsBlock().contains((block.getRelative(face)))) {
 				adjacent = true;
 			}
@@ -246,20 +249,20 @@ public abstract class WaterAbility extends ElementalAbility {
 
 	public static boolean isIcebendable(final Player player, final Material material, final boolean onlyIce) {
 		final BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(player);
-		return bPlayer == null ? null : isIce(material) && bPlayer.canIcebend() && (!onlyIce || material == Material.ICE);
+		return bPlayer != null && isIce(material) && bPlayer.canIcebend() && (!onlyIce || material == Material.ICE);
 	}
 
 	public static boolean isPlantbendable(final Player player, final Material material, final boolean onlyLeaves) {
 		final BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(player);
 		if (onlyLeaves) {
-			return bPlayer == null ? null : isPlant(material) && bPlayer.canPlantbend() && isLeaves(material);
+			return bPlayer != null && isPlant(material) && bPlayer.canPlantbend() && isLeaves(material);
 		} else {
-			return bPlayer == null ? null : isPlant(material) && bPlayer.canPlantbend();
+			return bPlayer != null && isPlant(material) && bPlayer.canPlantbend();
 		}
 	}
 
 	public static boolean isLeaves(final Block block) {
-		return block != null ? isLeaves(block.getType()) : false;
+		return block != null && isLeaves(block.getType());
 	}
 
 	public static boolean isLeaves(final Material material) {
@@ -267,7 +270,7 @@ public abstract class WaterAbility extends ElementalAbility {
 	}
 
 	public static boolean isSnow(final Block block) {
-		return block != null ? isSnow(block.getType()) : false;
+		return block != null && isSnow(block.getType());
 	}
 
 	public static boolean isSnow(final Material material) {
@@ -275,11 +278,33 @@ public abstract class WaterAbility extends ElementalAbility {
 	}
 	
 	public static boolean isCauldron(final Block block) {
-		return isCauldron(block.getType()) ? isCauldron(block.getType()) : GeneralMethods.getMCVersion() < 1170 && block.getType() == Material.CAULDRON && ((Levelled) block.getBlockData()).getLevel() >= 1;
+		return isCauldron(block.getType());
 	}
 	
 	public static boolean isCauldron(final Material material) {
-		return GeneralMethods.getMCVersion() >= 1170 && (material == Material.getMaterial("WATER_CAULDRON") || material == Material.getMaterial("POWDER_SNOW_CAULDRON"));
+		return material == Material.WATER_CAULDRON || material == Material.POWDER_SNOW_CAULDRON;
+	}
+
+	public static boolean isSponge(final Block block) {
+		return block != null && isSponge(block.getType());
+	}
+
+	public static boolean isSponge(final Material material) {
+		return material == Material.WET_SPONGE;
+	}
+
+	/**
+	 * Checks if a source block is a transformable source.
+	 *
+	 * @param block
+	 * @return True if the block is a non-transparent source, False otherwise.
+	 */
+	public static boolean isTransformableBlock(final Block block) {
+		return isTransformableBlock(block.getType());
+	}
+
+	public static boolean isTransformableBlock(final Material material) {
+		return WATER_TRANSFORMABLE_BLOCKS.containsKey(material);
 	}
 
 	public static boolean isWaterbendable(final Player player, final String abilityName, final Block block) {
@@ -299,8 +324,47 @@ public abstract class WaterAbility extends ElementalAbility {
 		return true;
 	}
 
+	public static Map<Material, Material> getWaterTransformableBlocks() {
+		// If we want to revisit this configurably in the future, we can reuse this code.
+
+		/*
+		List<String> transformableBlocks = getConfig().getStringList("Properties.Water.TransformableBlocks");
+		Map<Material, Material> transformables = new HashMap<>();
+
+		for (String block : transformableBlocks) {
+			String[] split = block.split(">");
+			if (split.length != 2) {
+				ProjectKorra.log.warning("Invalid TransformableBlock: " + block);
+				continue;
+			}
+			Material from = Material.getMaterial(split[0]);
+			Material to = Material.getMaterial(split[1]);
+			if (from == null || to == null) {
+				ProjectKorra.log.warning("Invalid TransformableBlock: " + block);
+				continue;
+			}
+			transformables.put(from, to);
+		}
+		 */
+		Map<Material, Material> transformables = new HashMap<>();
+		transformables.put(Material.MUD, Material.DIRT);
+		transformables.put(Material.PACKED_MUD, Material.DIRT);
+		transformables.put(Material.MUDDY_MANGROVE_ROOTS, Material.MANGROVE_ROOTS);
+		transformables.put(Material.WET_SPONGE, Material.SPONGE);
+		return transformables;
+	}
+
+	/*
+	public static void setupWaterTransformableBlocks() {
+		if (!WATER_TRANSFORMABLE_BLOCKS.isEmpty()) {
+			WATER_TRANSFORMABLE_BLOCKS.clear();
+		}
+		WATER_TRANSFORMABLE_BLOCKS.putAll(getWaterTransformableBlocks());
+	}
+	 */
+
 	public static void playFocusWaterEffect(final Block block) {
-		ParticleEffect.SMOKE_NORMAL.display(block.getLocation().add(0.5, 0.5, 0.5), 4);
+		block.getLocation().getWorld().spawnParticle(Particle.SMOKE, block.getLocation().add(0.5, 0.5, 0.5), 4, 0, 0, 0, 0, null, true);
 	}
 
 	public static void playIcebendingSound(final Location loc) {
@@ -314,6 +378,23 @@ public abstract class WaterAbility extends ElementalAbility {
 				sound = Sound.valueOf(getConfig().getString("Properties.Water.IceSound.Sound"));
 			} catch (final IllegalArgumentException exception) {
 				ProjectKorra.log.warning("Your current value for 'Properties.Water.IceSound.Sound' is not valid.");
+			} finally {
+				loc.getWorld().playSound(loc, sound, volume, pitch);
+			}
+		}
+	}
+
+	public static void playMudbendingSound(final Location loc) {
+		if (getConfig().getBoolean("Properties.Water.PlaySound")) {
+			final float volume = (float) getConfig().getDouble("Properties.Water.MudSound.Volume");
+			final float pitch = (float) getConfig().getDouble("Properties.Water.MudSound.Pitch");
+
+			Sound sound = Sound.BLOCK_MUD_STEP;
+
+			try {
+				sound = Sound.valueOf(getConfig().getString("Properties.Water.MudSound.Sound"));
+			} catch (final IllegalArgumentException exception) {
+				ProjectKorra.log.warning("Your current value for 'Properties.Water.MudSound.Sound' is not valid.");
 			} finally {
 				loc.getWorld().playSound(loc, sound, volume, pitch);
 			}
@@ -354,6 +435,22 @@ public abstract class WaterAbility extends ElementalAbility {
 		}
 	}
 
+	public static boolean updateSourceBlock(final Block sourceBlock) {
+		if (isCauldron(sourceBlock)) {
+			GeneralMethods.setCauldronData(sourceBlock, ((Levelled) sourceBlock.getBlockData()).getLevel() - 1);
+			return true;
+		} else if (isTransformableBlock(sourceBlock)) {
+			if (isMud(sourceBlock)) {
+				playMudbendingSound(sourceBlock.getLocation());
+			} else if (isSponge(sourceBlock)) {
+				sourceBlock.getWorld().playSound(sourceBlock.getLocation(), Sound.BLOCK_SLIME_BLOCK_BREAK, 1, 1);
+			}
+			sourceBlock.setType(WATER_TRANSFORMABLE_BLOCKS.get(sourceBlock.getType()));
+			return true;
+		}
+		return false;
+	}
+
 	/**
 	 * This method was used for the old collision detection system. Please see
 	 * {@link Collision} for the new system.
@@ -389,6 +486,7 @@ public abstract class WaterAbility extends ElementalAbility {
 	 * @return The modified value
 	 */
 	@Override
+	@Deprecated
 	public double applyModifiers(double value) {
 		return GeneralMethods.applyModifiers(value, getNightFactor(1.0));
 	}
@@ -398,6 +496,7 @@ public abstract class WaterAbility extends ElementalAbility {
 	 * @param value The value to modify
 	 * @return The modified value
 	 */
+	@Deprecated
 	public long applyModifiers(long value) {
 		return GeneralMethods.applyModifiers(value, getNightFactor(1.0));
 	}
@@ -407,6 +506,7 @@ public abstract class WaterAbility extends ElementalAbility {
 	 * @param value The value to modify
 	 * @return The modified value
 	 */
+	@Deprecated
 	public double applyInverseModifiers(double value) {
 		return GeneralMethods.applyInverseModifiers(value, getNightFactor(1.0));
 	}
@@ -416,6 +516,7 @@ public abstract class WaterAbility extends ElementalAbility {
 	 * @param value The value to modify
 	 * @return The modified value
 	 */
+	@Deprecated
 	public long applyInverseModifiers(long value) {
 		return GeneralMethods.applyInverseModifiers(value, getNightFactor(1.0));
 	}

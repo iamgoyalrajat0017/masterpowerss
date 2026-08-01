@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.logging.Logger;
 
+import com.djrapitops.plan.extension.ExtensionService;
+import com.projectkorra.projectkorra.hooks.PlanExtension;
 import com.projectkorra.projectkorra.region.RegionProtection;
 import org.bukkit.Bukkit;
 import org.bukkit.Statistic;
@@ -51,7 +53,6 @@ public class ProjectKorra extends JavaPlugin {
 
 
 		new ConfigManager();
-		new GeneralMethods(this);
 		final boolean checkUpdateOnStartup = ConfigManager.getConfig().getBoolean("Properties.UpdateChecker");
 		this.updater = new Updater(this, "https://projectkorra.com/forum/resources/projectkorra-core.1/", checkUpdateOnStartup);
 		new Commands(this);
@@ -75,13 +76,14 @@ public class ProjectKorra extends JavaPlugin {
 		BendingBoardManager.setup();
 		BendingPlayer.DISABLED_WORLDS = new HashSet<>(ConfigManager.defaultConfig.get().getStringList("Properties.DisabledWorlds"));
 
-		this.getServer().getPluginManager().registerEvents(new PKListener(this), this);
+		this.getServer().getPluginManager().registerEvents(new PKListener(), this);
 		this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new BendingManager(), 0, 1);
 		this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new AirbendingManager(this), 0, 1);
 		this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new WaterbendingManager(this), 0, 1);
 		this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new EarthbendingManager(this), 0, 1);
 		this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new FirebendingManager(this), 0, 1);
 		this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new ChiblockingManager(this), 0, 1);
+		this.getServer().getScheduler().runTaskTimerAsynchronously(this, new BendingManager.TempElementsRunnable(), 20, 20);
 		this.revertChecker = this.getServer().getScheduler().runTaskTimerAsynchronously(this, new RevertChecker(this), 0, 200);
 
 		for (final Player player : Bukkit.getOnlinePlayers()) {
@@ -91,19 +93,11 @@ public class ProjectKorra extends JavaPlugin {
 			Manager.getManager(StatisticsManager.class).load(player.getUniqueId());
 		}
 
-		final Metrics metrics = new Metrics(this);
-		metrics.addCustomChart(new Metrics.AdvancedPie("Elements") {
+		final Metrics metrics = new Metrics(this, 909);
+		metrics.addCustomChart(new Metrics.AdvancedPie("Elements", () -> {
 
-			@Override
-			public HashMap<String, Integer> getValues(final HashMap<String, Integer> valueMap) {
-				for (final Element element : Element.getMainElements()) {
-					valueMap.put(element.getName(), this.getPlayersWithElement(element));
-				}
-
-				return valueMap;
-			}
-
-			private int getPlayersWithElement(final Element element) {
+			final HashMap<String, Integer> valueMap = new HashMap<>();
+			for (final Element element : Element.getMainElements()) {
 				int counter = 0;
 				for (final Player player : Bukkit.getOnlinePlayers()) {
 					final BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(player);
@@ -111,10 +105,11 @@ public class ProjectKorra extends JavaPlugin {
 						counter++;
 					}
 				}
-
-				return counter;
+				valueMap.put(element.getName(), counter);
 			}
-		});
+
+			return valueMap;
+		}));
 
 		final double cacheTime = ConfigManager.getConfig().getDouble("Properties.RegionProtection.CacheBlockTime");
 
@@ -123,6 +118,10 @@ public class ProjectKorra extends JavaPlugin {
 		if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
 			papiHook = new PlaceholderAPIHook(this);
 			papiHook.register();
+		}
+
+		if (Bukkit.getPluginManager().isPluginEnabled("Plan")) {
+			new PlanExtension();
 		}
 	}
 

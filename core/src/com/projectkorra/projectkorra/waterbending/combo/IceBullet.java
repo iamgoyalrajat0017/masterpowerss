@@ -7,10 +7,12 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.projectkorra.projectkorra.ability.util.ComboUtil;
+import com.projectkorra.projectkorra.attribute.markers.DayNightFactor;
 import com.projectkorra.projectkorra.configuration.ConfigManager;
 import com.projectkorra.projectkorra.region.RegionProtection;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Entity;
@@ -32,7 +34,6 @@ import com.projectkorra.projectkorra.firebending.combo.FireComboStream;
 import com.projectkorra.projectkorra.util.BlockSource;
 import com.projectkorra.projectkorra.util.ClickType;
 import com.projectkorra.projectkorra.util.DamageHandler;
-import com.projectkorra.projectkorra.util.ParticleEffect;
 import com.projectkorra.projectkorra.util.TempBlock;
 import com.projectkorra.projectkorra.waterbending.util.WaterSourceGrabber;
 
@@ -44,21 +45,22 @@ public class IceBullet extends IceAbility implements ComboAbility {
 
 	private int leftClicks;
 	private int rightClicks;
-	@Attribute(Attribute.DAMAGE)
+	@Attribute(Attribute.DAMAGE) @DayNightFactor
 	private double damage;
-	@Attribute(Attribute.SPEED)
+	@Attribute(Attribute.SPEED) @DayNightFactor
 	private double speed;
-	@Attribute(Attribute.RANGE)
+	@Attribute(Attribute.RANGE) @DayNightFactor
 	private double range;
-	@Attribute(Attribute.RADIUS)
+	@Attribute(Attribute.RADIUS) @DayNightFactor
 	private double radius;
 	private double shootTime;
 	private double shots;
 	@Attribute("MaxShots")
 	private double maxShots;
 	private double animationSpeed;
-	@Attribute(Attribute.COOLDOWN)
+	@Attribute(Attribute.COOLDOWN) @DayNightFactor(invert = true)
 	private long cooldown;
+	@Attribute("ShotCooldown") @DayNightFactor(invert = true)
 	private long shotcooldown;
 	private long time;
 	private AbilityState state;
@@ -80,13 +82,13 @@ public class IceBullet extends IceAbility implements ComboAbility {
 			return;
 		}
 
-		this.damage = applyModifiers(getConfig().getDouble("Abilities.Water.IceBullet.Damage"));
-		this.range = applyModifiers(getConfig().getDouble("Abilities.Water.IceBullet.Range"));
-		this.radius = applyModifiers(getConfig().getDouble("Abilities.Water.IceBullet.Radius"));
-		this.cooldown = applyInverseModifiers(getConfig().getLong("Abilities.Water.IceBullet.Cooldown"));
-		this.shotcooldown = applyInverseModifiers(getConfig().getLong("Abilities.Water.IceBullet.ShotCooldown"));
-		this.shootTime = applyModifiers(getConfig().getLong("Abilities.Water.IceBullet.ShootTime"));
-		this.maxShots = applyModifiers(getConfig().getInt("Abilities.Water.IceBullet.MaxShots"));
+		this.damage = getConfig().getDouble("Abilities.Water.IceBullet.Damage");
+		this.range = getConfig().getDouble("Abilities.Water.IceBullet.Range");
+		this.radius = getConfig().getDouble("Abilities.Water.IceBullet.Radius");
+		this.cooldown = getConfig().getLong("Abilities.Water.IceBullet.Cooldown");
+		this.shotcooldown = getConfig().getLong("Abilities.Water.IceBullet.ShotCooldown");
+		this.shootTime = getConfig().getLong("Abilities.Water.IceBullet.ShootTime");
+		this.maxShots = getConfig().getInt("Abilities.Water.IceBullet.MaxShots");
 		this.animationSpeed = getConfig().getDouble("Abilities.Water.IceBullet.AnimationSpeed");
 		this.speed = 1;
 
@@ -282,7 +284,7 @@ public class IceBullet extends IceAbility implements ComboAbility {
 						fs.setDensity(10);
 						fs.setSpread(0.1F);
 						fs.setUseNewParticles(true);
-						fs.setParticleEffect(ParticleEffect.SNOW_SHOVEL);
+						fs.setParticle(Particle.ITEM_SNOWBALL);
 						fs.setCollides(false);
 						fs.runTaskTimer(ProjectKorra.plugin, (0), 1L);
 						this.tasks.add(fs);

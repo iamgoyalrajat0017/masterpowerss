@@ -1,12 +1,12 @@
 package com.projectkorra.projectkorra.earthbending;
 
 import org.bukkit.Location;
+import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
 import com.projectkorra.projectkorra.ability.EarthAbility;
 import com.projectkorra.projectkorra.attribute.Attribute;
-import com.projectkorra.projectkorra.util.ParticleEffect;
 
 public class Shockwave extends EarthAbility {
 
@@ -28,12 +28,6 @@ public class Shockwave extends EarthAbility {
 		this.chargeTime = getConfig().getLong("Abilities.Earth.Shockwave.ChargeTime");
 		this.threshold = getConfig().getDouble("Abilities.Earth.Shockwave.FallThreshold");
 		this.range = getConfig().getDouble("Abilities.Earth.Shockwave.Range");
-
-		if (this.bPlayer.isAvatarState()) {
-			this.range = getConfig().getDouble("Abilities.Avatar.AvatarState.Earth.Shockwave.Range");
-			this.cooldown = getConfig().getLong("Abilities.Avatar.AvatarState.Earth.Shockwave.Cooldown");
-			this.chargeTime = getConfig().getLong("Abilities.Avatar.AvatarState.Earth.Shockwave.ChargeTime");
-		}
 
 		if (!this.bPlayer.canBend(this) || hasAbility(player, Shockwave.class)) {
 			return;
@@ -83,7 +77,7 @@ public class Shockwave extends EarthAbility {
 			}
 		} else if (this.charged) {
 			final Location location = this.player.getEyeLocation().add(this.player.getEyeLocation().getDirection());
-			ParticleEffect.SMOKE_NORMAL.display(location, 1);
+			location.getWorld().spawnParticle(Particle.SMOKE, location, 1, 0, 0, 0, 0, null, true);
 		}
 	}
 

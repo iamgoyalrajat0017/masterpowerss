@@ -6,11 +6,15 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.world.WorldEvent;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * An event that is called when the time of a world changes. This is used for Day/Night factors for water and
+ * fire elements.
+ */
 @Experimental
 public class WorldTimeEvent extends WorldEvent {
 
     public enum Time {
-        DAY, NIGHT
+        DAY, DUSK, NIGHT, DAWN,
     }
 
     private static final HandlerList HANDLERS = new HandlerList();

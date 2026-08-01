@@ -3,10 +3,13 @@ package com.projectkorra.projectkorra.firebending;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
+import com.projectkorra.projectkorra.attribute.markers.DayNightFactor;
 import com.projectkorra.projectkorra.region.RegionProtection;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.block.BlastFurnace;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.type.Campfire;
@@ -42,17 +45,18 @@ public class FireBlast extends FireAbility {
 	private boolean isFireBurst = false;
 	private boolean fireBurstIgnite;
 	private int ticks;
-	@Attribute(Attribute.COOLDOWN)
+	@Attribute(Attribute.COOLDOWN) @DayNightFactor(invert = true)
 	private long cooldown;
 	private double speedFactor;
-	@Attribute(Attribute.RANGE)
+	@Attribute(Attribute.RANGE) @DayNightFactor
 	private double range;
-	@Attribute(Attribute.DAMAGE)
+	@Attribute(Attribute.DAMAGE) @DayNightFactor
 	private double damage;
-	@Attribute(Attribute.SPEED)
+	@Attribute(Attribute.SPEED) @DayNightFactor
 	private double speed;
+	@Attribute(Attribute.RADIUS) @DayNightFactor
 	private double collisionRadius;
-	@Attribute(Attribute.FIRE_TICK)
+	@Attribute(Attribute.FIRE_TICK) @DayNightFactor
 	private double fireTicks;
 	@Attribute(Attribute.KNOCKBACK)
 	private double knockback;
@@ -110,14 +114,14 @@ public class FireBlast extends FireAbility {
 		this.showParticles = true;
 		this.fireBurstIgnite = getConfig().getBoolean("Abilities.Fire.FireBurst.Ignite");
 		this.dissipate = getConfig().getBoolean("Abilities.Fire.FireBlast.Dissipate");
-		this.cooldown = applyModifiersCooldown(getConfig().getLong("Abilities.Fire.FireBlast.Cooldown"));
-		this.range = applyModifiersRange(getConfig().getDouble("Abilities.Fire.FireBlast.Range"));
-		this.speed = applyModifiers(getConfig().getDouble("Abilities.Fire.FireBlast.Speed"));
-		this.collisionRadius = applyModifiers(getConfig().getDouble("Abilities.Fire.FireBlast.CollisionRadius"));
-		this.fireTicks = applyModifiers(getConfig().getDouble("Abilities.Fire.FireBlast.FireTicks"));
+		this.cooldown = getConfig().getLong("Abilities.Fire.FireBlast.Cooldown");
+		this.range = getConfig().getDouble("Abilities.Fire.FireBlast.Range");
+		this.speed = getConfig().getDouble("Abilities.Fire.FireBlast.Speed");
+		this.collisionRadius = getConfig().getDouble("Abilities.Fire.FireBlast.CollisionRadius");
+		this.fireTicks = getConfig().getDouble("Abilities.Fire.FireBlast.FireTicks");
 		this.knockback = getConfig().getDouble("Abilities.Fire.FireBlast.Knockback");
-		this.flameRadius = applyModifiers(getConfig().getDouble("Abilities.Fire.FireBlast.FlameParticleRadius"));
-		this.damage = applyModifiersDamage(getConfig().getDouble("Abilities.Fire.FireBlast.Damage"));
+		this.flameRadius = getConfig().getDouble("Abilities.Fire.FireBlast.FlameParticleRadius");
+		this.damage = getConfig().getDouble("Abilities.Fire.FireBlast.Damage");
 		this.random = new Random();
 	}
 
@@ -148,6 +152,11 @@ public class FireBlast extends FireAbility {
 			this.remove();
 			return false;
 		}
+		for (Block b : GeneralMethods.getBlocksAroundPoint(block.getLocation(), 1.4)) {
+			if (!isSnow(b)) continue;
+
+			dryWetBlocks(b, this, ThreadLocalRandom.current().nextInt(4) == 0);
+		}
 		if (!block.isPassable()) {
 			if (block.getType() == Material.FURNACE && this.powerFurnace) {
 				final Furnace furnace = (Furnace) block.getState();
@@ -172,6 +181,8 @@ public class FireBlast extends FireAbility {
 				if (!this.isFireBurst || this.fireBurstIgnite) {
 					this.ignite(this.location);
 				}
+			} else if (block.getType() == Material.WET_SPONGE) {
+				dryWetBlocks(block, this, true);
 			}
 			this.remove();
 			return false;

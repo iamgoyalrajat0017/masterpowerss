@@ -6,7 +6,11 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.projectkorra.projectkorra.attribute.Attribute;
+import com.projectkorra.projectkorra.attribute.markers.DayNightFactor;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -18,24 +22,32 @@ import com.projectkorra.projectkorra.util.DamageHandler;
 
 public class FireManipulation extends FireAbility {
 
-	public static enum FireManipulationType {
+	public enum FireManipulationType {
 		SHIFT, CLICK;
 	}
 
 	// Configurable variables.
+	@Attribute("Stream" + Attribute.COOLDOWN) @DayNightFactor(invert = true)
 	private long streamCooldown;
+	@Attribute("Stream" + Attribute.RANGE) @DayNightFactor
 	private double streamRange;
+	@Attribute("Stream" + Attribute.DAMAGE) @DayNightFactor
 	private double streamDamage;
+	@Attribute("Stream" + Attribute.SPEED) @DayNightFactor
 	private double streamSpeed;
 	private int streamParticles;
 	private boolean streamSneaking = true;
 	private long streamRemoveTime = 0;
 	private Vector streamSneakDirection;
 
+	@Attribute("Shield" + Attribute.COOLDOWN) @DayNightFactor(invert = true)
 	private long shieldCooldown;
+	@Attribute("Shield" + Attribute.RANGE) @DayNightFactor
 	private double shieldRange;
+	@Attribute("Shield" + Attribute.DAMAGE) @DayNightFactor
 	private double shieldDamage;
 	private int shieldParticles;
+	@Attribute("Shield" + Attribute.DURATION) @DayNightFactor
 	private long maxDuration;
 
 	// Instance related variables.
@@ -61,17 +73,17 @@ public class FireManipulation extends FireAbility {
 
 	public void setFields() {
 		if (this.fireManipulationType == FireManipulationType.SHIFT) {
-			this.streamCooldown = applyModifiersCooldown(getConfig().getLong("Abilities.Fire.FireManipulation.Stream.Cooldown"));
-			this.streamRange = applyModifiersRange(getConfig().getDouble("Abilities.Fire.FireManipulation.Stream.Range"));
-			this.streamDamage = applyModifiersDamage(getConfig().getDouble("Abilities.Fire.FireManipulation.Stream.Damage"));
+			this.streamCooldown = getConfig().getLong("Abilities.Fire.FireManipulation.Stream.Cooldown");
+			this.streamRange = getConfig().getDouble("Abilities.Fire.FireManipulation.Stream.Range");
+			this.streamDamage = getConfig().getDouble("Abilities.Fire.FireManipulation.Stream.Damage");
 			this.streamSpeed = getConfig().getDouble("Abilities.Fire.FireManipulation.Stream.Speed");
 			this.streamParticles = getConfig().getInt("Abilities.Fire.FireManipulation.Stream.Particles");
 
-			this.shieldCooldown = applyModifiersCooldown(getConfig().getLong("Abilities.Fire.FireManipulation.Shield.Cooldown"));
-			this.shieldRange = applyModifiersRange(getConfig().getDouble("Abilities.Fire.FireManipulation.Shield.Range"));
-			this.shieldDamage = applyModifiersDamage(getConfig().getDouble("Abilities.Fire.FireManipulation.Shield.Damage"));
+			this.shieldCooldown = getConfig().getLong("Abilities.Fire.FireManipulation.Shield.Cooldown");
+			this.shieldRange = getConfig().getDouble("Abilities.Fire.FireManipulation.Shield.Range");
+			this.shieldDamage = getConfig().getDouble("Abilities.Fire.FireManipulation.Shield.Damage");
 			this.shieldParticles = getConfig().getInt("Abilities.Fire.FireManipulation.Shield.Particles");
-			this.maxDuration = (long) applyModifiers(getConfig().getLong("Abilities.Fire.FireManipulation.Shield.MaxDuration"));
+			this.maxDuration = getConfig().getLong("Abilities.Fire.FireManipulation.Shield.MaxDuration");
 			this.points = new ConcurrentHashMap<>();
 		} else if (this.fireManipulationType == FireManipulationType.CLICK) {
 
@@ -118,6 +130,9 @@ public class FireManipulation extends FireAbility {
 					if (entity instanceof LivingEntity && entity.getUniqueId() != this.player.getUniqueId()) {
 						DamageHandler.damageEntity(entity, this.shieldDamage, this);
 					}
+				}
+				for (Block block : GeneralMethods.getBlocksAroundPoint(point, 1.2D)) {
+					dryWetBlocks(block, this);
 				}
 				if (new Random().nextInt(this.points.keySet().size()) == 0) {
 					playFirebendingSound(point);
@@ -180,6 +195,9 @@ public class FireManipulation extends FireAbility {
 				if (entity instanceof LivingEntity && entity.getUniqueId() != this.player.getUniqueId()) {
 					DamageHandler.damageEntity(entity, this.streamDamage, this);
 				}
+			}
+			for (Block block : GeneralMethods.getBlocksAroundPoint(this.shotPoint, 2)) {
+				dryWetBlocks(block, this);
 			}
 			if (new Random().nextInt(5) == 0) {
 				playFirebendingSound(this.shotPoint);

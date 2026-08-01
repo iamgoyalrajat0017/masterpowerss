@@ -1,6 +1,8 @@
 package com.projectkorra.projectkorra.firebending.combustion;
 
+import com.projectkorra.projectkorra.attribute.markers.DayNightFactor;
 import org.bukkit.Location;
+import org.bukkit.Particle;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -14,9 +16,7 @@ import com.projectkorra.projectkorra.ability.CombustionAbility;
 import com.projectkorra.projectkorra.ability.ElementalAbility;
 import com.projectkorra.projectkorra.ability.util.Collision;
 import com.projectkorra.projectkorra.attribute.Attribute;
-import com.projectkorra.projectkorra.avatar.AvatarState;
 import com.projectkorra.projectkorra.util.DamageHandler;
-import com.projectkorra.projectkorra.util.ParticleEffect;
 import com.projectkorra.projectkorra.region.RegionProtection;
 
 public class Combustion extends CombustionAbility {
@@ -25,17 +25,17 @@ public class Combustion extends CombustionAbility {
 
 	private boolean breakBlocks;
 	private int ticks;
-	@Attribute(Attribute.COOLDOWN)
+	@Attribute(Attribute.COOLDOWN) @DayNightFactor(invert = true)
 	private long cooldown;
-	@Attribute("ExplosivePower")
+	@Attribute("ExplosivePower") @DayNightFactor
 	private float explosivePower;
-	@Attribute(Attribute.DAMAGE)
+	@Attribute(Attribute.DAMAGE) @DayNightFactor
 	private double damage;
-	@Attribute(Attribute.RADIUS)
+	@Attribute(Attribute.RADIUS) @DayNightFactor
 	private double radius;
-	@Attribute(Attribute.SPEED)
+	@Attribute(Attribute.SPEED) @DayNightFactor
 	private double speed;
-	@Attribute(Attribute.RANGE)
+	@Attribute(Attribute.RANGE) @DayNightFactor
 	private double range;
 	private double speedFactor;
 	private Location location;
@@ -53,24 +53,18 @@ public class Combustion extends CombustionAbility {
 
 		this.ticks = 0;
 		this.breakBlocks = getConfig().getBoolean("Abilities.Fire.Combustion.BreakBlocks");
-		this.explosivePower = (float) applyModifiers(getConfig().getDouble("Abilities.Fire.Combustion.ExplosivePower"));
-		this.cooldown = applyModifiersCooldown(getConfig().getLong("Abilities.Fire.Combustion.Cooldown"));
-		this.damage = applyModifiersDamage(getConfig().getDouble("Abilities.Fire.Combustion.Damage"));
-		this.radius = applyModifiers(getConfig().getDouble("Abilities.Fire.Combustion.Radius"));
+		this.explosivePower = (float) getConfig().getDouble("Abilities.Fire.Combustion.ExplosivePower");
+		this.cooldown = getConfig().getLong("Abilities.Fire.Combustion.Cooldown");
+		this.damage = getConfig().getDouble("Abilities.Fire.Combustion.Damage");
+		this.radius = getConfig().getDouble("Abilities.Fire.Combustion.Radius");
 		this.speed = getConfig().getDouble("Abilities.Fire.Combustion.Speed");
-		this.range = applyModifiersRange(getConfig().getDouble("Abilities.Fire.Combustion.Range"));
+		this.range = getConfig().getDouble("Abilities.Fire.Combustion.Range");
 		this.origin = player.getEyeLocation();
 		this.direction = player.getEyeLocation().getDirection().normalize();
 		this.location = this.origin.clone();
 		this.explosionCount = 0;
 
-		if (this.bPlayer.isAvatarState()) {
-			this.range = AvatarState.getValue(this.range);
-			this.damage = AvatarState.getValue(this.damage);
-		} /*else if (isDay(player.getWorld())) {
-			this.range = this.getDayFactor(this.range);
-			this.damage = this.getDayFactor(this.damage);
-		}*/
+		this.recalculateAttributes();
 
 		if (RegionProtection.isRegionProtected(this, GeneralMethods.getTargetedLocation(player, this.range))) {
 			return;
@@ -84,7 +78,7 @@ public class Combustion extends CombustionAbility {
 		final Combustion combustion = getAbility(player, Combustion.class);
 		if (combustion != null) {
 			combustion.createExplosion(combustion.location, combustion.explosivePower, combustion.breakBlocks);
-			ParticleEffect.EXPLOSION_NORMAL.display(combustion.location, 3, Math.random(), Math.random(), Math.random(), 0);
+			combustion.location.getWorld().spawnParticle(Particle.POOF, combustion.location, 3, Math.random(), Math.random(), Math.random(), 0, null, true);
 		}
 	}
 
@@ -107,9 +101,9 @@ public class Combustion extends CombustionAbility {
 	}
 
 	private void advanceLocation() {
-		ParticleEffect.FIREWORKS_SPARK.display(this.location, 2, .001, .001, .001, 0);
-		if(explosionCount % 5 == 0) 
-			ParticleEffect.EXPLOSION_LARGE.display(this.location, 1, .001, .001, .001, 0);
+		this.location.getWorld().spawnParticle(Particle.FIREWORK, this.location, 2, .001, .001, .001, 0, null, true);
+		if (explosionCount % 5 == 0)
+			this.location.getWorld().spawnParticle(Particle.EXPLOSION, this.location, 1, .001, .001, .001, 0, null, true);
 		playCombustionSound(this.location);
 		emitFirebendingLight(this.location);
 		this.location = this.location.add(this.direction.clone().multiply(this.speedFactor));
