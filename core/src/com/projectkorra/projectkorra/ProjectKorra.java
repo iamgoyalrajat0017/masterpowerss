@@ -5,9 +5,11 @@ import java.util.HashSet;
 import java.util.logging.Logger;
 
 import com.djrapitops.plan.extension.ExtensionService;
+import com.hypesmp.masterpowers.MasterPowersModule;
 import com.projectkorra.projectkorra.hooks.PlanExtension;
 import com.projectkorra.projectkorra.region.RegionProtection;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Statistic;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -45,11 +47,22 @@ public class ProjectKorra extends JavaPlugin {
 	public Updater updater;
 	BukkitTask revertChecker;
 	private static PlaceholderAPIHook papiHook;
+	public static MasterPowersModule masterPowers;
 
 	@Override
 	public void onEnable() {
 		plugin = this;
 		ProjectKorra.log = this.getLogger();
+
+		final String[] banner = {
+				"&d&m----------------------------------------",
+				"&d  &lMasterPowers &7- &fBending &7+ &fPowers",
+				"&5  Exclusive build for &d&lHYPE MC&5 only.",
+				"&d&m----------------------------------------"
+		};
+		for (String line : banner) {
+			Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', line));
+		}
 
 
 		new ConfigManager();
@@ -123,10 +136,17 @@ public class ProjectKorra extends JavaPlugin {
 		if (Bukkit.getPluginManager().isPluginEnabled("Plan")) {
 			new PlanExtension();
 		}
+
+		// MasterPowers merged module (see com.hypesmp.masterpowers)
+		masterPowers = new MasterPowersModule(this);
+		masterPowers.enable();
 	}
 
 	@Override
 	public void onDisable() {
+		if (masterPowers != null) {
+			masterPowers.disable();
+		}
 		this.revertChecker.cancel();
 		GeneralMethods.stopBending();
 		for (final Player player : this.getServer().getOnlinePlayers()) {
