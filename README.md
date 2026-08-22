@@ -89,3 +89,4 @@ Players may choose any of the disciplines below and play. Each discipline has it
 - Takes less fall damage, jump higher, and run faster.
 - Strikes deal more damage than normal.
 - Not very good when it comes to defense.
+- <!-- rebuild -->
