@@ -101,7 +101,7 @@ public class ConfigManager {
 			config.addDefault("Chat.Prefixes.Avatar", "[Avatar]");
 			config.addDefault("Chat.Prefixes.Nonbender", "[Nonbender]");
 
-			config.addDefault("Board.Title", "&lAbilities");
+			config.addDefault("Board.Title", "&d&lHYPE &5MC &7| &fMasterPowers");
 			config.addDefault("Board.Prefix.Text", "> ");
 			config.addDefault("Board.Prefix.SelectedColor", ChatColor.WHITE.getName());
 			config.addDefault("Board.Prefix.NonSelectedColor", ChatColor.DARK_GRAY.getName());
