@@ -9,7 +9,7 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - run: mvn -f core/pom.xml clean package -DskipTests
+      - run: mvn clean package -DskipTests
       - uses: actions/upload-artifact@v4
         with:
           name: MasterPowers-jar
