@@ -74,7 +74,11 @@ public class Extraction extends MetalAbility {
 
 	private int getAmount(int max) {
 		final Random rand = new Random();
-		int chanceMultiplier = rand.nextDouble() * 100 <= this.tripleChance ? 2 : (rand.nextDouble() * 100 <= this.doubleChance ? 1 : 0);
+		// Fix (#1351): using two independent rand.nextDouble() rolls made the configured
+		// DoubleLootChance / TripleLootChance percentages inaccurate (each branch rolled
+		// separately instead of sharing one roll against cumulative thresholds).
+		double roll = rand.nextDouble() * 100;
+		int chanceMultiplier = roll <= this.tripleChance ? 2 : (roll <= this.tripleChance + this.doubleChance ? 1 : 0);
 		int min = chanceMultiplier * max + 1;
 		return rand.nextInt(max) + min;
 	}
