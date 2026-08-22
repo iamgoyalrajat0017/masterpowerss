@@ -1,0 +1,16 @@
+name: Build
+on: [push, workflow_dispatch]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - run: mvn -f core/pom.xml clean package -DskipTests
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MasterPowers-jar
+          path: core/target/*.jar
