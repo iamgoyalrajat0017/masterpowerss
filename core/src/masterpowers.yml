@@ -1,0 +1,40 @@
+unlock-playtime-seconds: 129600
+cooldowns:
+  lightning: 15
+  fire: 8
+  water: 10
+  earth: 12
+  speed: 20
+  jump: 20
+  shield: 30
+  dash: 8
+  magnet: 15
+  invisibility: 45
+  heal: 25
+  blink: 12
+damage:
+  lightning: 8
+  fire: 4
+  water: 5
+  earth: 6
+duration:
+  fire: 5
+  speed: 10
+  jump: 10
+  shield: 8
+  invisibility: 10
+amplifier:
+  speed: 2
+  jump: 3
+  shield: 2
+dash-power: 1.8
+magnet-radius: 12
+
+# addons
+heal-amount: 6
+blink-distance: 8
+
+# HYPEMC exclusive branding
+premium-branding: true
+premium-server-name: "HYPE MC"
+premium-effects: true
